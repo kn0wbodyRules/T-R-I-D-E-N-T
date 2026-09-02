@@ -1,0 +1,156 @@
+@import url('https://fonts.googleapis.com/css2?family=Caesar+Dressing&family=IBM+Plex+Mono:ital,wght@0,100..700;1,100..700&family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Slackey&display=swap');
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+@import "react-grid-layout/css/styles.css";
+@import "react-resizable/css/styles.css";
+
+/* ───────────────────────────────────────────────
+   Design Tokens — Shamil Predicts
+   ─────────────────────────────────────────────── */
+@theme {
+  --color-outer: #14170D;
+  --color-panel: #3F4A1F;
+  --color-card: #F5E6A0;
+  --color-accent: #2D8FE0;
+  --color-text-card: #2B2E1A;
+  --color-text-panel: #F5E6A0;
+  --color-hazard: #C0392B;
+  --color-moderate: #D4A017;
+  --color-safe: #4C7A3D;
+
+  --font-sans: "Nunito", sans-serif;
+  --font-display: "Caesar Dressing", system-ui;
+  --font-slackey: "Slackey", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+/* ───────────────────────────────────────────────
+   Base Reset & Defaults
+   ─────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-outer);
+  color: var(--color-text-panel);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ───────────────────────────────────────────────
+   Material Symbols Overrides
+   ─────────────────────────────────────────────── */
+.material-symbols-rounded {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  vertical-align: middle;
+  user-select: none;
+}
+
+.material-symbols-rounded.filled {
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+/* ───────────────────────────────────────────────
+   Skeleton / Pending States
+   ─────────────────────────────────────────────── */
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.skeleton {
+  background: rgba(43, 46, 26, 0.12);
+  border-radius: 6px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-line {
+  height: 12px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  background: rgba(43, 46, 26, 0.10);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-line:last-child {
+  width: 60%;
+}
+
+.pending-dash {
+  color: rgba(43, 46, 26, 0.28);
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  letter-spacing: 0.05em;
+}
+
+/* ───────────────────────────────────────────────
+   Leaflet Overrides
+   ─────────────────────────────────────────────── */
+.leaflet-container {
+  background: #ddd8c4 !important;
+  border-radius: 0 0 16px 16px;
+}
+
+.leaflet-control-attribution {
+  font-size: 9px !important;
+  background: rgba(245, 230, 160, 0.7) !important;
+  border-radius: 4px !important;
+}
+
+/* ───────────────────────────────────────────────
+   react-grid-layout Overrides
+   ─────────────────────────────────────────────── */
+.react-grid-layout {
+  position: relative;
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: rgba(45, 143, 224, 0.12) !important;
+  border: 2px dashed rgba(45, 143, 224, 0.35) !important;
+  border-radius: 16px !important;
+}
+
+.react-resizable-handle {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.react-grid-item:hover .react-resizable-handle {
+  opacity: 0.4;
+}
+
+.react-resizable-handle::after {
+  border-color: var(--color-text-card) !important;
+}
+
+/* ───────────────────────────────────────────────
+   Scrollbar
+   ─────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(245, 230, 160, 0.25);
+  border-radius: 3px;
+}

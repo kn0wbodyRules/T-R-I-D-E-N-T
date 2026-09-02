@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="50" fill="#005A9C" />
+  <g stroke="#FBBF24" stroke-width="8" stroke-linecap="butt" fill="none">
+    <path d="M 50 22 L 50 100" />
+    <path d="M 22 40 L 22 55 A 28 28 0 0 0 78 55 L 78 40" />
+  </g>
+  <!-- Minimalist Sharp Tips -->
+  <polygon points="50,10 43,26 57,26" fill="#FBBF24" />
+  <polygon points="22,25 15,42 29,42" fill="#FBBF24" />
+  <polygon points="78,25 71,42 85,42" fill="#FBBF24" />
+</svg>

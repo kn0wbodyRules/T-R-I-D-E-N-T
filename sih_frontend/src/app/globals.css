@@ -1,0 +1,249 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'Valley Sans';
+  src: url('/fonts/ValleySans-Variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  /* =========================================================
+     1. LIGHT MODE BASE THEME TOKENS (Saved Default Baseline)
+     ========================================================= */
+  :root {
+    /* Dodger Blue Brand Accents */
+    --dodger-blue: #005A9C;
+    --dodger-blue-light: #2A7DC4;
+    --dodger-blue-dark: #003F6E;
+    --dodger-red: #EF3E42;
+    --dodger-white: #FFFFFF;
+
+    /* Theme Layout Tokens (Light Mode) */
+    --bg-canvas: #F4F7FB;
+    --bg-panel: #FFFFFF;
+    --bg-panel-subtle: #F8FAFD;
+    --bg-panel-elevated: #EDF3FA;
+    --border-hairline: #005A9C;
+    --border-hairline-bright: #005A9C;
+
+    /* Text Colors (Light Mode) */
+    --text-primary: #041527;
+    --text-muted: #334E68;
+    --text-subtle: #5A738E;
+    --heading-color: #005A9C;
+    --subheading-color: #041527;
+
+    /* Dynamic Island Tokens (Light Mode: Black Island with White Text) */
+    --island-bg: #000000;
+    --island-border: #000000;
+    --island-header: #FFFFFF;
+    --island-eyebrow: #93C5FD;
+    --island-text-blue: #FFFFFF;
+    --island-text-sub: #93C5FD;
+    --island-panel-bg: rgba(255, 255, 255, 0.08);
+    --island-panel-border: rgba(255, 255, 255, 0.15);
+    --island-row-text: #FFFFFF;
+
+    /* Accents */
+    --accent-active: #005A9C;
+    --accent-active-light: #2A7DC4;
+    --accent-warning: #D97706;
+    --accent-danger: #EF3E42;
+    --accent-success: #00B074;
+
+    /* Typography */
+    --font-heading: 'Climate Crisis', sans-serif;
+    --font-subheading: 'Alata', sans-serif;
+    --font-body: 'Valley Sans', sans-serif;
+  }
+
+  /* =========================================================
+     2. DARK MODE THEME TOKENS (Active when data-theme="dark")
+     ========================================================= */
+  html[data-theme="dark"] {
+    --bg-canvas: #071322;
+    --bg-panel: #0D2137;
+    --bg-panel-subtle: #0B1C2F;
+    --bg-panel-elevated: #153250;
+    --border-hairline: rgba(255, 255, 255, 0.22);
+    --border-hairline-bright: rgba(255, 255, 255, 0.4);
+
+    /* Text Colors (Dark Mode) */
+    --text-primary: #FFFFFF;
+    --text-muted: #D6E4F0;
+    --text-subtle: #A3C0DC;
+    --heading-color: #FFFFFF;
+    --subheading-color: #FFFFFF;
+
+    /* Dynamic Island Tokens (Dark Mode: White Island with BLUE Headings) */
+    --island-bg: #FFFFFF;
+    --island-border: #FFFFFF;
+    --island-header: #005A9C;
+    --island-eyebrow: #005A9C;
+    --island-text-blue: #005A9C;
+    --island-text-sub: #005A9C;
+    --island-panel-bg: #F4F7FB;
+    --island-panel-border: rgba(0, 90, 156, 0.2);
+    --island-row-text: #041527;
+  }
+
+  *, *::before, *::after {
+    font-family: 'Valley Sans', sans-serif;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  html, body {
+    background-color: var(--bg-canvas) !important;
+    color: var(--text-primary) !important;
+    font-family: 'Valley Sans', sans-serif !important;
+    overflow-x: hidden;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  /* MAIN HEADINGS: STRICTLY CLIMATE CRISIS */
+  h1, h2, .font-heading {
+    font-family: "Climate Crisis", sans-serif !important;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    font-variation-settings: "YEAR" 1979;
+    letter-spacing: 0.03em;
+    color: var(--heading-color);
+    transition: color 0.25s ease;
+  }
+
+  /* SIDE-HEADINGS / CARD TITLES / SUBHEADERS: STRICTLY ALATA */
+  h3, h4, h5, .font-subheading, .side-heading {
+    font-family: "Alata", sans-serif !important;
+    font-weight: 400;
+    font-style: normal;
+    letter-spacing: 0.01em;
+    color: var(--subheading-color) !important;
+    transition: color 0.25s ease;
+  }
+
+  /* ALL OTHER TEXT ELEMENTS: STRICTLY VALLEY SANS */
+  p, span, div, a, button, input, select, textarea, label, td, th, tr, table, strong, em, b, i, small, code, pre, kbd, samp, .font-mono, [class*="font-mono"], .text-mono-data {
+    font-family: 'Valley Sans', sans-serif !important;
+  }
+
+  /* Material symbols icon glyphs */
+  .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined' !important;
+    font-weight: normal;
+    font-style: normal;
+    font-size: 20px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Clean Scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 90, 156, 0.2);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 90, 156, 0.4);
+  }
+}
+
+/* =========================================================
+   3. THEME UTILITY HELPERS (Seamless Light & Dark Mode)
+   ========================================================= */
+.theme-canvas {
+  background-color: var(--bg-canvas) !important;
+}
+
+.theme-panel {
+  background-color: var(--bg-panel) !important;
+  border-color: var(--border-hairline) !important;
+}
+
+.theme-panel-subtle {
+  background-color: var(--bg-panel-subtle) !important;
+  border-color: var(--border-hairline) !important;
+}
+
+.theme-panel-elevated {
+  background-color: var(--bg-panel-elevated) !important;
+}
+
+.theme-text-primary {
+  color: var(--text-primary) !important;
+}
+
+.theme-text-muted {
+  color: var(--text-muted) !important;
+}
+
+.theme-text-subtle {
+  color: var(--text-subtle) !important;
+}
+
+.theme-border {
+  border-color: var(--border-hairline) !important;
+}
+
+.theme-header {
+  background-color: var(--bg-canvas) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Dynamic Island Theming: Black in Light Mode with White Headings, White in Dark Mode with Blue Headings */
+.theme-island {
+  background-color: var(--island-bg) !important;
+  border-color: var(--island-border) !important;
+  color: var(--island-text-blue) !important;
+}
+
+.theme-island-heading,
+.theme-island .font-heading,
+.theme-island h3 {
+  color: #FFFFFF !important;
+}
+
+html[data-theme="dark"] .theme-island-heading,
+html[data-theme="dark"] .theme-island .font-heading,
+html[data-theme="dark"] .theme-island h3 {
+  color: #005A9C !important;
+}
+
+.theme-island-eyebrow {
+  color: var(--island-eyebrow) !important;
+}
+
+.theme-island-panel {
+  background-color: var(--island-panel-bg) !important;
+  border-color: var(--island-panel-border) !important;
+}
+
+.theme-island-row-text {
+  color: var(--island-row-text) !important;
+}
+
+/* Print Overrides */
+@media print {
+  nav, header {
+    display: none !important;
+  }
+}
