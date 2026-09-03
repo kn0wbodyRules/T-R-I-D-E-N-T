@@ -1,3 +1,5 @@
+"use client";
+
 import {
   useEffect,
   useMemo,
@@ -154,7 +156,7 @@ export type TopoFieldProps = {
   style?: CSSProperties;
 };
 
-const LIGHT_PAPER = "#ffffff";
+const LIGHT_PAPER = "#F4F7FB";
 
 function clamp(value: number, minimum: number, maximum: number) {
   return Math.min(maximum, Math.max(minimum, value));
@@ -234,7 +236,7 @@ function patchTopoField(
       )
       .replace(
         /vec3 color = vec3\(0\.0\);\s*color \+= vec3\(1\.0\) \* gridLines;\s*color \+= vec3\(1\.0\) \* topoLines;/,
-        `vec3 paper = vec3(1.0, 1.0, 1.0);
+        `vec3 paper = vec3(0.957, 0.969, 0.984); // #F4F7FB
                     vec3 ink = vec3(0.0, 0.353, 0.612); // #005A9C Dodger Blue
                     float lines = clamp(gridLines + topoLines, 0.0, 1.0);
                     vec3 color = mix(paper, ink, lines);`

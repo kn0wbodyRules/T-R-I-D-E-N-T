@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "motion/react";
 import MaterialIcon from "@/components/ui/MaterialIcon";
-import TopoField from "@/components/ui/topo-field";
 
 interface OfficerLoginPageProps {
   onLoginSuccess: () => void;
@@ -112,11 +111,10 @@ export default function OfficerLoginPage({ onLoginSuccess }: OfficerLoginPagePro
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#F4F7FB] flex overflow-hidden select-none">
+    <div className="relative min-h-screen w-full flex overflow-hidden select-none">
       
-      {/* Decorative background elements */}
+      {/* Decorative background elements (now handled globally in layout.tsx) */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-50 z-0">
-        <TopoField mode="light" density={1} speed={1} opacity={0.6} />
       </div>
 
       {/* Left Side: Big Typography */}
