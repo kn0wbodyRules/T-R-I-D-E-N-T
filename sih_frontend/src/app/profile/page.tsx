@@ -18,7 +18,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col p-6 sm:p-8 max-w-[1400px] w-full mx-auto theme-canvas transition-colors duration-250">
+    <div className="flex-1 flex flex-col p-6 sm:p-8 max-w-[1400px] w-full mx-auto transition-colors duration-250">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between border-b theme-border pb-4 mb-8 gap-4">
         <div>

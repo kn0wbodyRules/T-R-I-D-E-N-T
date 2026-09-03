@@ -43,7 +43,7 @@ export default function ValidationBenchmarkPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col p-6 sm:p-8 max-w-[1600px] w-full mx-auto theme-canvas transition-colors duration-250">
+    <div className="flex-1 flex flex-col p-6 sm:p-8 max-w-[1600px] w-full mx-auto transition-colors duration-250">
       {/* Header */}
       <div className="border-b theme-border pb-4 mb-8">
         <div className="flex items-center gap-2 text-xs theme-text-subtle mb-1">
@@ -287,7 +287,7 @@ export default function ValidationBenchmarkPage() {
                 </div>
 
                 {/* Side-by-Side Comparison with Real Generated Satellite Imagery */}
-                <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 theme-canvas">
+                <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   
                   {/* Panel 1: Official Ground Truth */}
                   <div className="flex flex-col gap-2">

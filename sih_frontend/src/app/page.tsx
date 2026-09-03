@@ -145,9 +145,8 @@ export default function DashboardPage() {
     return <OfficerLoginPage onLoginSuccess={handleLoginSuccess} />;
   }
 
-  // DASHBOARD CONTENT COMPONENT
   const renderDashboardContent = () => (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-[1720px] w-full mx-auto flex flex-col gap-6 theme-canvas transition-colors duration-250">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1720px] w-full mx-auto flex flex-col gap-6 transition-colors duration-250">
       {/* 1. Full-Width 4-Stat Cards Row (Accordion) */}
       <div className="flex flex-col lg:flex-row gap-4 min-h-[140px]">
         {/* Stat 1: Active Incidents */}
@@ -553,7 +552,7 @@ export default function DashboardPage() {
       {!isPlayingPreloader && (
         <>
           {hasSeenIntro || !isIntroReady ? (
-            <div className="flex-1 flex flex-col w-full relative theme-canvas">
+            <div className="flex-1 flex flex-col w-full relative">
               {renderDashboardContent()}
             </div>
           ) : (

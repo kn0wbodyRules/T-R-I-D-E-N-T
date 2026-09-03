@@ -49,14 +49,16 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col print:h-auto print:block text-[#041527] selection:bg-[#005A9C] selection:text-white antialiased">
         <Providers>
           {/* Global Background */}
-          <div className="fixed inset-0 pointer-events-none z-[-1] opacity-60">
+          <div className="fixed inset-0 pointer-events-none z-[0] opacity-60">
             <TopoField mode="light" density={1} speed={1.5} />
           </div>
           
-          <TopNavWrapper />
-          <main className="flex-1 flex flex-col print:block w-full relative">
-            {children}
-          </main>
+          <div className="relative z-10 flex-1 flex flex-col w-full h-full">
+            <TopNavWrapper />
+            <main className="flex-1 flex flex-col print:block w-full relative">
+              {children}
+            </main>
+          </div>
         </Providers>
       </body>
     </html>
