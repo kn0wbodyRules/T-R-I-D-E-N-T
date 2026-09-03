@@ -300,6 +300,7 @@ export default function ValidationBenchmarkPage() {
                         src={caseImages.groundTruth}
                         alt={`${benchmarkCase.incident_name} Official Ground Truth`}
                         fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
 
@@ -333,6 +334,7 @@ export default function ValidationBenchmarkPage() {
                         src={caseImages.prediction}
                         alt={`${benchmarkCase.incident_name} TRIDENT Prediction & Drift`}
                         fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
 

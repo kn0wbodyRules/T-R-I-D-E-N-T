@@ -71,7 +71,7 @@ export default function LightbulbThemeToggle({
       filter: "drop-shadow(0px 0px 8px rgba(255, 215, 0, 0.85))",
     },
     off: {
-      fill: "transparent",
+      fill: "rgba(255, 215, 0, 0)",
       stroke: "#FFFFFF",
       strokeWidth: 2,
       filter: "drop-shadow(0px 0px 0px rgba(0, 0, 0, 0))",
