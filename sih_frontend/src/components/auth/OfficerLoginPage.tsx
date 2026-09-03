@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "motion/react";
 import MaterialIcon from "@/components/ui/MaterialIcon";
+import TopoField from "@/components/ui/topo-field";
 
 interface OfficerLoginPageProps {
   onLoginSuccess: () => void;
@@ -115,7 +116,7 @@ export default function OfficerLoginPage({ onLoginSuccess }: OfficerLoginPagePro
       
       {/* Decorative background elements */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-50 z-0">
-        {/* Subtle grid pattern or shapes if needed */}
+        <TopoField mode="light" density={1} speed={1} opacity={0.6} />
       </div>
 
       {/* Left Side: Big Typography */}
