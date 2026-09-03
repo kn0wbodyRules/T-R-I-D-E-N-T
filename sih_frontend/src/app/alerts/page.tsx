@@ -56,103 +56,107 @@ export default function AlertsPage() {
         </div>
       </div>
 
-      {/* Dispatch Channels Dropdown Pill */}
-      <div className="relative mb-8 self-start">
+      {/* Dispatch Channels Expanding Card */}
+      <motion.div layout className="theme-panel border rounded-[38px] flex flex-col overflow-hidden shadow-xs mb-8">
         <button
           onClick={() => setIsDispatchOpen(!isDispatchOpen)}
-          className="theme-panel border hover:border-[#005A9C] rounded-full px-5 py-2.5 flex items-center gap-4 shadow-xs transition-colors cursor-pointer"
+          className="px-8 py-5 flex items-center justify-between cursor-pointer hover:bg-[rgba(0,90,156,0.02)] transition-colors w-full text-left"
         >
-          <span className="font-heading text-lg sm:text-xl uppercase tracking-wide">DISPATCH CHANNELS</span>
-          <div className="flex items-center gap-2.5 ml-1 sm:ml-2 border-l pl-3 sm:pl-4 theme-border">
-            <div className="flex items-center gap-1.5" title="Active Channels">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#00B074] shadow-[0_0_8px_rgba(0,176,116,0.6)]"></span>
-              <span className="font-number font-bold text-[#00B074] text-sm">
-                {[channelEmail, channelSms, channelWebhook].filter(Boolean).length}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5" title="Standby Channels">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#FFB800] opacity-80"></span>
-              <span className="font-number font-bold text-[#FFB800] text-sm opacity-80">
-                {3 - [channelEmail, channelSms, channelWebhook].filter(Boolean).length}
-              </span>
+          <div className="flex items-center gap-4">
+            <span className="font-heading text-xl uppercase tracking-wide">DISPATCH CHANNELS</span>
+            <div className="flex items-center gap-2.5 ml-2 border-l pl-4 theme-border">
+              <div className="flex items-center gap-1.5" title="Active Channels">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#00B074] shadow-[0_0_8px_rgba(0,176,116,0.6)]"></span>
+                <span className="font-number font-bold text-[#00B074] text-sm">
+                  {[channelEmail, channelSms, channelWebhook].filter(Boolean).length}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5" title="Standby Channels">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#FFB800] opacity-80"></span>
+                <span className="font-number font-bold text-[#FFB800] text-sm opacity-80">
+                  {3 - [channelEmail, channelSms, channelWebhook].filter(Boolean).length}
+                </span>
+              </div>
             </div>
           </div>
           <MaterialIcon
             name={isDispatchOpen ? "expand_less" : "expand_more"}
-            size={20}
-            className="ml-1 theme-text-subtle"
+            size={24}
+            className="theme-text-subtle"
           />
         </button>
 
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
           {isDispatchOpen && (
             <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              className="absolute top-full left-0 mt-3 p-2 theme-panel border rounded-2xl shadow-xl z-50 flex flex-col gap-1 min-w-[280px]"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="overflow-hidden border-t theme-border bg-[#F8FAFD] dark:bg-[#0B1C2F]"
             >
-              <label className="flex items-center justify-between cursor-pointer group p-3 hover:bg-[rgba(0,90,156,0.05)] rounded-xl transition-colors">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={channelEmail}
-                    onChange={(e) => setChannelEmail(e.target.checked)}
-                    className="accent-[#005A9C] w-4 h-4 cursor-pointer"
-                  />
-                  <span className="text-xs font-semibold theme-text-primary group-hover:text-[#005A9C] transition-colors">
-                    Email (ops-intel@ntro.gov.in)
-                  </span>
-                </div>
-                {channelEmail ? (
-                  <span className="w-2 h-2 rounded-full bg-[#00B074] shadow-[0_0_5px_rgba(0,176,116,0.5)]"></span>
-                ) : (
-                  <span className="w-2 h-2 rounded-full bg-[#FFB800] opacity-50"></span>
-                )}
-              </label>
+              <div className="px-8 py-6 flex flex-col sm:flex-row gap-6">
+                <label className="flex-1 flex items-center justify-between cursor-pointer group p-4 theme-panel border rounded-2xl hover:border-[#005A9C] transition-colors shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={channelEmail}
+                      onChange={(e) => setChannelEmail(e.target.checked)}
+                      className="accent-[#005A9C] w-4 h-4 cursor-pointer"
+                    />
+                    <span className="text-sm font-semibold theme-text-primary group-hover:text-[#005A9C] transition-colors">
+                      Email (ops-intel@ntro.gov.in)
+                    </span>
+                  </div>
+                  {channelEmail ? (
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#00B074] shadow-[0_0_5px_rgba(0,176,116,0.5)]"></span>
+                  ) : (
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#FFB800] opacity-50"></span>
+                  )}
+                </label>
 
-              <label className="flex items-center justify-between cursor-pointer group p-3 hover:bg-[rgba(0,90,156,0.05)] rounded-xl transition-colors">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={channelSms}
-                    onChange={(e) => setChannelSms(e.target.checked)}
-                    className="accent-[#005A9C] w-4 h-4 cursor-pointer"
-                  />
-                  <span className="text-xs font-semibold theme-text-primary group-hover:text-[#005A9C] transition-colors">
-                    SMS / SATCOM Alert
-                  </span>
-                </div>
-                {channelSms ? (
-                  <span className="w-2 h-2 rounded-full bg-[#00B074] shadow-[0_0_5px_rgba(0,176,116,0.5)]"></span>
-                ) : (
-                  <span className="w-2 h-2 rounded-full bg-[#FFB800] opacity-50"></span>
-                )}
-              </label>
+                <label className="flex-1 flex items-center justify-between cursor-pointer group p-4 theme-panel border rounded-2xl hover:border-[#005A9C] transition-colors shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={channelSms}
+                      onChange={(e) => setChannelSms(e.target.checked)}
+                      className="accent-[#005A9C] w-4 h-4 cursor-pointer"
+                    />
+                    <span className="text-sm font-semibold theme-text-primary group-hover:text-[#005A9C] transition-colors">
+                      SMS / SATCOM Alert
+                    </span>
+                  </div>
+                  {channelSms ? (
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#00B074] shadow-[0_0_5px_rgba(0,176,116,0.5)]"></span>
+                  ) : (
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#FFB800] opacity-50"></span>
+                  )}
+                </label>
 
-              <label className="flex items-center justify-between cursor-pointer group p-3 hover:bg-[rgba(0,90,156,0.05)] rounded-xl transition-colors">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={channelWebhook}
-                    onChange={(e) => setChannelWebhook(e.target.checked)}
-                    className="accent-[#005A9C] w-4 h-4 cursor-pointer"
-                  />
-                  <span className="text-xs font-semibold theme-text-primary group-hover:text-[#005A9C] transition-colors">
-                    ICG Ops Room Webhook
-                  </span>
-                </div>
-                {channelWebhook ? (
-                  <span className="w-2 h-2 rounded-full bg-[#00B074] shadow-[0_0_5px_rgba(0,176,116,0.5)]"></span>
-                ) : (
-                  <span className="w-2 h-2 rounded-full bg-[#FFB800] opacity-50"></span>
-                )}
-              </label>
+                <label className="flex-1 flex items-center justify-between cursor-pointer group p-4 theme-panel border rounded-2xl hover:border-[#005A9C] transition-colors shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={channelWebhook}
+                      onChange={(e) => setChannelWebhook(e.target.checked)}
+                      className="accent-[#005A9C] w-4 h-4 cursor-pointer"
+                    />
+                    <span className="text-sm font-semibold theme-text-primary group-hover:text-[#005A9C] transition-colors">
+                      ICG Ops Room Webhook
+                    </span>
+                  </div>
+                  {channelWebhook ? (
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#00B074] shadow-[0_0_5px_rgba(0,176,116,0.5)]"></span>
+                  ) : (
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#FFB800] opacity-50"></span>
+                  )}
+                </label>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
 
       {/* Alert Feed */}
       <div className="theme-panel border rounded-[38px] flex flex-col overflow-hidden shadow-xs">
