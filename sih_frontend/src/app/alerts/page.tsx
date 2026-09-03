@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
+import { motion, AnimatePresence } from "motion/react";
 import { fetchAlerts } from "@/lib/mock-data";
 import { useIncident } from "@/components/providers/IncidentContext";
 import SignalFlagBadge from "@/components/ui/SignalFlagBadge";
@@ -17,6 +18,7 @@ export default function AlertsPage() {
     queryFn: fetchAlerts,
   });
 
+  const [isDispatchOpen, setIsDispatchOpen] = useState(false);
   const [channelEmail, setChannelEmail] = useState(true);
   const [channelSms, setChannelSms] = useState(true);
   const [channelWebhook, setChannelWebhook] = useState(false);
@@ -54,46 +56,102 @@ export default function AlertsPage() {
         </div>
       </div>
 
-      {/* Dispatch Channels */}
-      <div className="theme-panel border rounded-[38px] p-6 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
-        <div className="flex items-center gap-3 text-xs theme-text-muted">
-          <span className="font-heading text-xl uppercase tracking-wide">DISPATCH CHANNELS:</span>
-        </div>
+      {/* Dispatch Channels Dropdown Pill */}
+      <div className="relative mb-8 self-start">
+        <button
+          onClick={() => setIsDispatchOpen(!isDispatchOpen)}
+          className="theme-panel border hover:border-[#005A9C] rounded-full px-5 py-2.5 flex items-center gap-4 shadow-xs transition-colors cursor-pointer"
+        >
+          <span className="font-heading text-lg sm:text-xl uppercase tracking-wide">DISPATCH CHANNELS</span>
+          <div className="flex items-center gap-2.5 ml-1 sm:ml-2 border-l pl-3 sm:pl-4 theme-border">
+            <div className="flex items-center gap-1.5" title="Active Channels">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#00B074] shadow-[0_0_8px_rgba(0,176,116,0.6)]"></span>
+              <span className="font-number font-bold text-[#00B074] text-sm">
+                {[channelEmail, channelSms, channelWebhook].filter(Boolean).length}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5" title="Standby Channels">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#FFB800] opacity-80"></span>
+              <span className="font-number font-bold text-[#FFB800] text-sm opacity-80">
+                {3 - [channelEmail, channelSms, channelWebhook].filter(Boolean).length}
+              </span>
+            </div>
+          </div>
+          <MaterialIcon
+            name={isDispatchOpen ? "expand_less" : "expand_more"}
+            size={20}
+            className="ml-1 theme-text-subtle"
+          />
+        </button>
 
-        <div className="flex flex-wrap items-center gap-4 text-xs">
-          <label className="flex items-center gap-2 cursor-pointer select-none theme-panel-subtle border px-4 py-2 rounded-full hover:border-[#005A9C] transition-colors">
-            <input
-              type="checkbox"
-              checked={channelEmail}
-              onChange={(e) => setChannelEmail(e.target.checked)}
-              className="accent-[#005A9C]"
-            />
-            <span className="theme-text-primary">Email (ops-intel@ntro.gov.in)</span>
-            <span className="text-[10px] text-[#00B074] font-bold">[ACTIVE]</span>
-          </label>
+        <AnimatePresence>
+          {isDispatchOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className="absolute top-full left-0 mt-3 p-2 theme-panel border rounded-2xl shadow-xl z-50 flex flex-col gap-1 min-w-[280px]"
+            >
+              <label className="flex items-center justify-between cursor-pointer group p-3 hover:bg-[rgba(0,90,156,0.05)] rounded-xl transition-colors">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={channelEmail}
+                    onChange={(e) => setChannelEmail(e.target.checked)}
+                    className="accent-[#005A9C] w-4 h-4 cursor-pointer"
+                  />
+                  <span className="text-xs font-semibold theme-text-primary group-hover:text-[#005A9C] transition-colors">
+                    Email (ops-intel@ntro.gov.in)
+                  </span>
+                </div>
+                {channelEmail ? (
+                  <span className="w-2 h-2 rounded-full bg-[#00B074] shadow-[0_0_5px_rgba(0,176,116,0.5)]"></span>
+                ) : (
+                  <span className="w-2 h-2 rounded-full bg-[#FFB800] opacity-50"></span>
+                )}
+              </label>
 
-          <label className="flex items-center gap-2 cursor-pointer select-none theme-panel-subtle border px-4 py-2 rounded-full hover:border-[#005A9C] transition-colors">
-            <input
-              type="checkbox"
-              checked={channelSms}
-              onChange={(e) => setChannelSms(e.target.checked)}
-              className="accent-[#005A9C]"
-            />
-            <span className="theme-text-primary">SMS / SATCOM Alert</span>
-            <span className="text-[10px] text-[#00B074] font-bold">[ACTIVE]</span>
-          </label>
+              <label className="flex items-center justify-between cursor-pointer group p-3 hover:bg-[rgba(0,90,156,0.05)] rounded-xl transition-colors">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={channelSms}
+                    onChange={(e) => setChannelSms(e.target.checked)}
+                    className="accent-[#005A9C] w-4 h-4 cursor-pointer"
+                  />
+                  <span className="text-xs font-semibold theme-text-primary group-hover:text-[#005A9C] transition-colors">
+                    SMS / SATCOM Alert
+                  </span>
+                </div>
+                {channelSms ? (
+                  <span className="w-2 h-2 rounded-full bg-[#00B074] shadow-[0_0_5px_rgba(0,176,116,0.5)]"></span>
+                ) : (
+                  <span className="w-2 h-2 rounded-full bg-[#FFB800] opacity-50"></span>
+                )}
+              </label>
 
-          <label className="flex items-center gap-2 cursor-pointer select-none theme-panel-subtle border px-4 py-2 rounded-full hover:border-[#005A9C] transition-colors">
-            <input
-              type="checkbox"
-              checked={channelWebhook}
-              onChange={(e) => setChannelWebhook(e.target.checked)}
-              className="accent-[#005A9C]"
-            />
-            <span className="theme-text-primary">ICG Ops Room Webhook</span>
-            <span className="text-[10px] theme-text-subtle">[STANDBY]</span>
-          </label>
-        </div>
+              <label className="flex items-center justify-between cursor-pointer group p-3 hover:bg-[rgba(0,90,156,0.05)] rounded-xl transition-colors">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={channelWebhook}
+                    onChange={(e) => setChannelWebhook(e.target.checked)}
+                    className="accent-[#005A9C] w-4 h-4 cursor-pointer"
+                  />
+                  <span className="text-xs font-semibold theme-text-primary group-hover:text-[#005A9C] transition-colors">
+                    ICG Ops Room Webhook
+                  </span>
+                </div>
+                {channelWebhook ? (
+                  <span className="w-2 h-2 rounded-full bg-[#00B074] shadow-[0_0_5px_rgba(0,176,116,0.5)]"></span>
+                ) : (
+                  <span className="w-2 h-2 rounded-full bg-[#FFB800] opacity-50"></span>
+                )}
+              </label>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Alert Feed */}
