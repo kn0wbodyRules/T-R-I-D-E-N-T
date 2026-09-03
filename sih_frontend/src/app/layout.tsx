@@ -20,7 +20,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Alata&family=Climate+Crisis:YEAR@1979&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Alata&family=Archivo+Black&family=Climate+Crisis:YEAR@1979&display=swap"
           rel="stylesheet"
         />
         {/* Google Material Symbols Outlined font for UI Icons */}

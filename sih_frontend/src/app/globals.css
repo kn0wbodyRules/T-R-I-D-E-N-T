@@ -54,8 +54,9 @@
     --accent-success: #00B074;
 
     /* Typography */
-    --font-heading: 'Climate Crisis', sans-serif;
-    --font-subheading: 'Alata', sans-serif;
+    --font-heading: 'Archivo Black', sans-serif;
+    --font-subheading: 'Archivo Black', sans-serif;
+    --font-climate: 'Climate Crisis', sans-serif;
     --font-body: 'Valley Sans', sans-serif;
   }
 
@@ -103,30 +104,32 @@
     transition: background-color 0.25s ease, color 0.25s ease;
   }
 
-  /* MAIN HEADINGS: STRICTLY CLIMATE CRISIS */
-  h1, h2, .font-heading {
-    font-family: "Climate Crisis", sans-serif !important;
-    font-optical-sizing: auto;
+  /* MAIN HEADINGS & SUBHEADINGS: ARCHIVO BLACK FOR ALL HEADINGS AND NUMBERS */
+  h1, h2, h3, h4, h5, .font-heading, .font-subheading, .side-heading {
+    font-family: "Archivo Black", sans-serif !important;
     font-weight: 400;
     font-style: normal;
-    font-variation-settings: "YEAR" 1979;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.02em;
     color: var(--heading-color);
     transition: color 0.25s ease;
   }
 
-  /* SIDE-HEADINGS / CARD TITLES / SUBHEADERS: STRICTLY ALATA */
-  h3, h4, h5, .font-subheading, .side-heading {
-    font-family: "Alata", sans-serif !important;
+  /* EXCEPTION: CLIMATE CRISIS FOR TRIDENT & SPECIFIC HERO TITLES */
+  .font-climate, .font-trident {
+    font-family: "Climate Crisis", sans-serif !important;
+    font-optical-sizing: auto;
     font-weight: 400;
     font-style: normal;
-    letter-spacing: 0.01em;
-    color: var(--subheading-color) !important;
-    transition: color 0.25s ease;
+    font-variation-settings: "YEAR" 1979 !important;
+  }
+
+  /* NUMBERS & DATA STATS: ARCHIVO BLACK */
+  .font-number, .font-mono, [class*="font-mono"], .text-mono-data {
+    font-family: 'Archivo Black', sans-serif !important;
   }
 
   /* ALL OTHER TEXT ELEMENTS: STRICTLY VALLEY SANS */
-  p, span, div, a, button, input, select, textarea, label, td, th, tr, table, strong, em, b, i, small, code, pre, kbd, samp, .font-mono, [class*="font-mono"], .text-mono-data {
+  p, span, div, a, button, input, select, textarea, label, td, th, tr, table, strong, em, b, i, small, code, pre, kbd, samp {
     font-family: 'Valley Sans', sans-serif !important;
   }
 

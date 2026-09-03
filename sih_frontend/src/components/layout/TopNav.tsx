@@ -111,7 +111,7 @@ export default function TopNav() {
           <div className="flex items-center justify-center px-6">
             <Link
               href="/"
-              className="font-heading text-4xl sm:text-5xl tracking-[0.16em] hover:opacity-90 transition-opacity select-none leading-none inline-block text-center text-[#005A9C]"
+              className="font-trident font-heading text-4xl sm:text-5xl tracking-[0.16em] hover:opacity-90 transition-opacity select-none leading-none inline-block text-center text-[#005A9C]"
             >
               TRIDENT
             </Link>

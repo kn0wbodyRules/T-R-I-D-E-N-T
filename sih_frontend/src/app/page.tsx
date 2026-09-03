@@ -512,7 +512,7 @@ export default function DashboardPage() {
               MARITIME SAR INTELLIGENCE
             </span>
             <h1
-              className="font-heading text-5xl sm:text-7xl lg:text-8xl tracking-wide uppercase leading-none"
+              className="font-climate font-heading text-5xl sm:text-7xl lg:text-8xl tracking-wide uppercase leading-none"
               style={{ color: "#F7F7FF" }}
             >
               OIL DOES NOT BELONG ON SEA

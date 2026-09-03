@@ -101,7 +101,7 @@ export default function IncidentLayout({
     <div className="flex-1 flex flex-col print:block print:min-h-0">
       {/* Print-only Global TRIDENT Header (Above everything) */}
       <div className="hidden print:block w-full text-center py-6 border-b border-[rgba(0,90,156,0.15)] bg-white">
-        <span className="font-heading text-6xl text-[#005A9C] tracking-widest uppercase">TRIDENT</span>
+        <span className="font-trident font-heading text-6xl text-[#005A9C] tracking-widest uppercase">TRIDENT</span>
       </div>
       
       <div className="flex-1 flex flex-col lg:flex-row print:block w-full max-w-[1720px] mx-auto p-4 sm:p-6 lg:p-8 gap-6 bg-[#F4F7FB]">
