@@ -11,6 +11,8 @@ import { useIncident } from "@/components/providers/IncidentContext";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import TopNav from "@/components/layout/TopNav";
 import MaterialIcon from "@/components/ui/MaterialIcon";
+import OfficerLoginPage from "@/components/auth/OfficerLoginPage";
+import WordsPreloader from "@/components/ui/WordsPreloader";
 
 export default function DashboardPage() {
   const {
@@ -19,9 +21,46 @@ export default function DashboardPage() {
     hasSeenIntro,
     isIntroReady,
     completeIntro,
+    resetIntro,
     casesViewMode,
     setCasesViewMode,
   } = useIncident();
+
+  // Authentication & Preloader sequence states
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [isPlayingPreloader, setIsPlayingPreloader] = useState<boolean>(false);
+  const [isAuthChecked, setIsAuthChecked] = useState<boolean>(false);
+
+  // Check stored auth session on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedAuth = sessionStorage.getItem("trident-officer-authenticated");
+      if (storedAuth === "true") {
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+      }
+      setIsAuthChecked(true);
+    }
+  }, []);
+
+  const handleLoginSuccess = () => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("trident-officer-authenticated", "true");
+    }
+    setIsLoggedIn(true);
+    setIsPlayingPreloader(true);
+  };
+
+  const handleLogout = () => {
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("trident-officer-authenticated");
+      sessionStorage.removeItem("trident-intro-seen");
+    }
+    setIsLoggedIn(false);
+    setIsPlayingPreloader(false);
+    resetIntro();
+  };
 
   // Accordion hover state for the 4 stat cards
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
@@ -47,7 +86,7 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    if (!hasSeenIntro && isIntroReady) {
+    if (isLoggedIn && !hasSeenIntro && isIntroReady && !isPlayingPreloader) {
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape" || e.key === "Enter") {
           handleCompleteIntro();
@@ -56,7 +95,7 @@ export default function DashboardPage() {
       window.addEventListener("keydown", handleKeyDown);
       return () => window.removeEventListener("keydown", handleKeyDown);
     }
-  }, [hasSeenIntro, isIntroReady]);
+  }, [isLoggedIn, hasSeenIntro, isIntroReady, isPlayingPreloader]);
 
   const { data: incidents = [], isLoading: isIncidentsLoading } = useQuery({
     queryKey: ["incidents"],
@@ -88,6 +127,23 @@ export default function DashboardPage() {
     : activeIncidentId === "INC-2026-0871"
     ? [5.890, 80.520]
     : [18.912, 71.845];
+
+  // Render loading state while checking session
+  if (!isAuthChecked) {
+    return (
+      <div className="min-h-screen w-full bg-[#041527] flex items-center justify-center text-white">
+        <div className="flex items-center gap-3">
+          <span className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+          <span className="font-mono text-xs tracking-widest text-blue-200 uppercase">INITIALIZING TRIDENT GATEWAY...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // 1. OFFICER LOGIN SCREEN (If not logged in)
+  if (!isLoggedIn) {
+    return <OfficerLoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
 
   // DASHBOARD CONTENT COMPONENT
   const renderDashboardContent = () => (
@@ -140,7 +196,7 @@ export default function DashboardPage() {
           </AnimatePresence>
         </motion.div>
 
-        {/* Stat 2: Contaminated Area */}
+        {/* Stat 2: Contaminated Area Extent */}
         <motion.div
           layout
           onMouseEnter={() => handleMouseEnter(2)}
@@ -352,7 +408,6 @@ export default function DashboardPage() {
                     const isCompact = casesViewMode === "list" && !isSelected;
 
                     if (isCompact) {
-                      {/* Compact 1-Line Mode for Non-Selected Cases in List Mode */}
                       return (
                         <div
                           key={inc.incident_id}
@@ -380,7 +435,6 @@ export default function DashboardPage() {
                       );
                     }
 
-                    {/* Expanded Detailed Card (For Selected Case or in Expanded Mode) */}
                     return (
                       <div
                         key={inc.incident_id}
@@ -410,7 +464,6 @@ export default function DashboardPage() {
                           </span>
                         </div>
 
-                        {/* Side-Heading in Alata font */}
                         <div
                           className="text-sm font-semibold leading-tight"
                           style={{
@@ -450,7 +503,6 @@ export default function DashboardPage() {
                 EEZ ACTIVE
               </span>
 
-              {/* View Mode Switcher: LIST vs EXPANDED */}
               <div className="flex items-center gap-1 theme-panel p-0.5 rounded-xl border">
                 <button
                   onClick={() => setCasesViewMode("list")}
@@ -487,56 +539,71 @@ export default function DashboardPage() {
     </div>
   );
 
-  // If intro has already been seen in this session:
-  // Render normal flat Dashboard immediately with TopNav.
-  if (hasSeenIntro || !isIntroReady) {
-    return (
-      <div className="flex-1 flex flex-col w-full relative theme-canvas">
-        {renderDashboardContent()}
-      </div>
-    );
-  }
-
-  // ONE-TIME CONTAINER SCROLL ANIMATION (PERSIAN BACKDROP & 2-LINE GHOST TYPOGRAPHY)
   return (
-    <div className="relative w-full bg-[#27187E] min-h-screen">
-      <ContainerScroll
-        onComplete={handleCompleteIntro}
-        titleComponent={
-          <div className="flex flex-col items-center justify-center text-center select-none">
-            {/* Exactly 2 lines: Eyebrow + Bold Headline */}
-            <span
-              className="text-lg sm:text-2xl uppercase tracking-widest block mb-2"
-              style={{ fontFamily: 'Alata, sans-serif', color: 'rgba(247, 247, 255, 0.8)' }}
-            >
-              MARITIME SAR INTELLIGENCE
-            </span>
-            <h1
-              className="font-climate font-heading text-5xl sm:text-7xl lg:text-8xl tracking-wide uppercase leading-none"
-              style={{ color: "#F7F7FF" }}
-            >
-              OIL DOES NOT BELONG ON SEA
-            </h1>
-          </div>
-        }
-      >
-        {/* Live Dashboard with TopNav rendered inside the tilted 3D Card */}
-        <div className="w-full flex flex-col min-h-full">
-          <TopNav />
-          {renderDashboardContent()}
-        </div>
-      </ContainerScroll>
+    <>
+      {/* 2. WORDS PRELOADER SEQUENCE (Triggers after login) */}
+      {isPlayingPreloader && (
+        <WordsPreloader
+          collegeName="TRIDENT PORTAL"
+          onComplete={() => setIsPlayingPreloader(false)}
+        />
+      )}
 
-      {/* Sleek Minimal Floating Skip Icon Control (Intro only) */}
-      <div className="fixed bottom-6 right-8 z-50">
-        <button
-          onClick={handleCompleteIntro}
-          className="w-10 h-10 rounded-full bg-black/60 hover:bg-black/90 backdrop-blur-md text-[#F7F7FF] border border-white/20 flex items-center justify-center transition-all cursor-pointer shadow-lg"
-          title="Skip Intro"
-        >
-          <MaterialIcon name="close" size={18} />
-        </button>
-      </div>
-    </div>
+      {/* 3. MAIN LANDING PAGE SEQUENCE (CONTAINER SCROLL "OIL DOES NOT BELONG ON SEA" -> DASHBOARD) */}
+      {!isPlayingPreloader && (
+        <>
+          {hasSeenIntro || !isIntroReady ? (
+            <div className="flex-1 flex flex-col w-full relative theme-canvas">
+              {renderDashboardContent()}
+            </div>
+          ) : (
+            <motion.div 
+              initial={{ y: "100vh" }}
+              animate={{ y: 0 }}
+              transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
+              className="relative w-full bg-[#27187E] min-h-screen"
+            >
+              <ContainerScroll
+                onComplete={handleCompleteIntro}
+                titleComponent={
+                  <div className="flex flex-col items-center justify-center text-center select-none">
+                    {/* Exactly 2 lines: Eyebrow + Bold Headline */}
+                    <span
+                      className="text-lg sm:text-2xl uppercase tracking-widest block mb-2"
+                      style={{ fontFamily: 'Alata, sans-serif', color: 'rgba(247, 247, 255, 0.8)' }}
+                    >
+                      MARITIME SAR INTELLIGENCE
+                    </span>
+                    <h1
+                      className="font-climate font-heading text-5xl sm:text-7xl lg:text-8xl tracking-wide uppercase leading-none"
+                      style={{ color: "#F7F7FF" }}
+                    >
+                      OIL DOES NOT BELONG ON SEA
+                    </h1>
+                  </div>
+                }
+              >
+                {/* Live Dashboard with TopNav rendered inside the tilted 3D Card */}
+                <div className="w-full flex flex-col min-h-full">
+                  <TopNav />
+                  {renderDashboardContent()}
+                </div>
+              </ContainerScroll>
+
+              {/* Sleek Minimal Floating Controls */}
+              <div className="fixed bottom-6 right-8 z-50 flex items-center gap-3">
+                <button
+                  onClick={handleCompleteIntro}
+                  className="w-10 h-10 rounded-full bg-black/60 hover:bg-black/90 backdrop-blur-md text-[#F7F7FF] border border-white/20 flex items-center justify-center transition-all cursor-pointer shadow-lg"
+                  title="Skip Intro"
+                >
+                  <MaterialIcon name="close" size={18} />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </>
+      )}
+    </>
   );
 }
