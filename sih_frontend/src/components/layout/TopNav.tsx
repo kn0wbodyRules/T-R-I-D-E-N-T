@@ -77,7 +77,7 @@ export default function TopNav() {
       <div className="max-w-[1720px] mx-auto px-6 sm:px-10 pt-4 pb-2 flex flex-col items-center justify-center relative">
         
         {/* Main Navbar Row: Left Pill Bar | Big Majestic TRIDENT Center | Right Pill Bar + Lightbulb Toggle */}
-        <div className="w-full flex items-center justify-between">
+        <div className="w-full flex items-center justify-between relative">
           
           {/* Left Pill Menu Bar: Dashboard & Validation with Dodger Blue Stroke */}
           <nav className="relative flex items-center gap-1.5 bg-[#FFFFFF] border-2 border-[#005A9C] p-1.5 rounded-full shadow-xs">
@@ -104,10 +104,20 @@ export default function TopNav() {
           </nav>
 
           {/* Center: Clean, Majestic Solid TRIDENT Wordmark */}
-          <div className="flex items-center justify-center px-6">
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center px-6 pointer-events-none z-10 hidden md:flex">
             <Link
               href="/"
-              className="font-trident font-heading text-4xl sm:text-5xl tracking-[0.16em] hover:opacity-90 transition-opacity select-none leading-none inline-block text-center text-[#005A9C]"
+              className="font-trident font-heading text-4xl sm:text-5xl tracking-[0.16em] hover:opacity-90 transition-opacity select-none leading-none inline-block text-center text-[#005A9C] pointer-events-auto"
+            >
+              TRIDENT
+            </Link>
+          </div>
+          
+          {/* Mobile Fallback: TRIDENT Wordmark inline to avoid overlapping if screens are too small */}
+          <div className="flex md:hidden items-center justify-center px-2">
+            <Link
+              href="/"
+              className="font-trident font-heading text-3xl tracking-[0.16em] hover:opacity-90 transition-opacity select-none leading-none inline-block text-center text-[#005A9C]"
             >
               TRIDENT
             </Link>
