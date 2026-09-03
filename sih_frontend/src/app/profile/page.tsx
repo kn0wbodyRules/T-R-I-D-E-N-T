@@ -234,6 +234,29 @@ export default function ProfilePage() {
                   REPLAY INTRO
                 </button>
               </div>
+
+              <div className="flex items-center justify-between p-4 rounded-2xl theme-panel-subtle border">
+                <div>
+                  <div className="text-xs font-bold theme-text-primary">LOG OUT OFFICER</div>
+                  <div className="text-[11px] theme-text-subtle">
+                    End current session and return to the Officer Authentication Gateway.
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      sessionStorage.removeItem("trident-officer-authenticated");
+                      sessionStorage.removeItem("trident-intro-seen");
+                    }
+                    resetIntro();
+                    // Just force a hard reload or push to / which will check session state
+                    window.location.href = '/';
+                  }}
+                  className="px-4 py-2 bg-[#EF3E42] hover:bg-[#d43538] text-white text-xs font-bold rounded-full transition-colors cursor-pointer shrink-0"
+                >
+                  LOG OUT
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-4 border-t theme-border">
