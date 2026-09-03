@@ -23,9 +23,8 @@ const MOCK_GREETINGS = [
 
 export default function WordsPreloader({
   onComplete,
-}: {
-  onComplete: () => void;
-}) {
+  collegeName,
+}: WordsPreloaderProps) {
   const wordsArray = [...MOCK_GREETINGS, `Welcome Shamil`];
   const [index, setIndex] = useState(0);
   const [isDone, setIsDone] = useState(false);

@@ -42,77 +42,50 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1">
-        {/* Left Column: Identity & Security Clearance Card (~40% width) */}
-        <div className="lg:col-span-5 flex flex-col gap-6">
-          <div className="theme-panel border rounded-[38px] p-8 flex flex-col items-center text-center relative overflow-hidden shadow-xs">
-            {/* Officer Avatar Badge */}
-            <div className="w-24 h-24 rounded-full bg-[#EDF3FA] border-2 border-[#005A9C] flex items-center justify-center text-[#005A9C] text-3xl font-heading mb-4">
-              RN
-            </div>
-
-            <h2 className="font-heading text-3xl uppercase tracking-wide">
-              Cdr. Rajesh V. Nair
-            </h2>
-            <span className="text-xs theme-text-subtle font-semibold mt-0.5">
-              Lead Maritime Forensic Analyst · NTRO
-            </span>
-
-            {/* Clearance Level Pill */}
-            <div className="mt-4 px-4 py-1.5 bg-[#EDF3FA] border border-[#005A9C] text-[#005A9C] text-xs rounded-full font-bold uppercase tracking-wider">
-              TOP SECRET // LEVEL-4 SATELLITE ACCESS
-            </div>
-
-            {/* Officer Attributes Strip */}
-            <div className="w-full mt-6 pt-6 border-t theme-border flex flex-col gap-3 text-xs text-left">
-              <div className="flex items-center justify-between">
-                <span className="theme-text-subtle uppercase tracking-wider font-semibold">OFFICER PIN</span>
-                <span className="theme-text-primary font-bold">NTRO-MAR-89104</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="theme-text-subtle uppercase tracking-wider font-semibold">ASSIGNED SECTOR</span>
-                <span className="theme-text-primary">Western EEZ & Arabian Sea</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="theme-text-subtle uppercase tracking-wider font-semibold">STATION</span>
-                <span className="theme-text-primary">New Delhi HQ (Terminal 04)</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="theme-text-subtle uppercase tracking-wider font-semibold">CERTIFICATE EXPIRY</span>
-                <span className="text-[#00B074] font-bold">2027-12-31 (VALID)</span>
-              </div>
-            </div>
+      <div className="flex flex-col gap-8 flex-1 max-w-3xl mx-auto w-full">
+        {/* Identity & Security Clearance Card */}
+        <div className="theme-panel border rounded-[38px] p-8 flex flex-col items-center text-center relative overflow-hidden shadow-xs">
+          {/* Officer Avatar Badge */}
+          <div className="w-24 h-24 rounded-full bg-[#EDF3FA] border-2 border-[#005A9C] flex items-center justify-center text-[#005A9C] text-3xl font-heading mb-4">
+            RN
           </div>
 
-          {/* Quick Active Incident Card */}
-          <div className="theme-panel border rounded-[38px] p-6 flex flex-col gap-3 shadow-xs">
-            <span className="text-[10px] theme-text-subtle uppercase tracking-wider font-semibold">
-              CURRENT ACTIVE SESSION
-            </span>
+          <h2 className="font-heading text-3xl uppercase tracking-wide">
+            Cdr. Rajesh V. Nair
+          </h2>
+          <span className="text-xs theme-text-subtle font-semibold mt-0.5">
+            Lead Maritime Forensic Analyst · NTRO
+          </span>
+
+          {/* Clearance Level Pill */}
+          <div className="mt-4 px-4 py-1.5 bg-[#EDF3FA] border border-[#005A9C] text-[#005A9C] text-xs rounded-full font-bold uppercase tracking-wider">
+            TOP SECRET // LEVEL-4 SATELLITE ACCESS
+          </div>
+
+          {/* Officer Attributes Strip */}
+          <div className="w-full mt-6 pt-6 border-t theme-border flex flex-col gap-3 text-xs text-left">
             <div className="flex items-center justify-between">
-              <div>
-                <span className="font-heading text-2xl text-[#005A9C] block">
-                  {activeIncidentId}
-                </span>
-                <span className="text-xs theme-text-subtle">
-                  Mumbai Offshore Sector 4 Investigation
-                </span>
-              </div>
-              <Link
-                href={`/incident/${activeIncidentId}/intake`}
-                className="px-4 py-2 bg-[#005A9C] hover:bg-[#00477d] text-white text-xs font-bold rounded-full transition-colors"
-              >
-                RESUME
-              </Link>
+              <span className="theme-text-subtle uppercase tracking-wider font-semibold">OFFICER PIN</span>
+              <span className="theme-text-primary font-bold">NTRO-MAR-89104</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="theme-text-subtle uppercase tracking-wider font-semibold">ASSIGNED SECTOR</span>
+              <span className="theme-text-primary">Western EEZ & Arabian Sea</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="theme-text-subtle uppercase tracking-wider font-semibold">STATION</span>
+              <span className="theme-text-primary">New Delhi HQ (Terminal 04)</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="theme-text-subtle uppercase tracking-wider font-semibold">CERTIFICATE EXPIRY</span>
+              <span className="text-[#00B074] font-bold">2027-12-31 (VALID)</span>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Security Telemetry & System Preferences (~60% width) */}
-        <div className="lg:col-span-7 flex flex-col gap-6">
-          {/* AIS Data Authority Setting */}
-          <div className="theme-panel border rounded-[38px] p-8 flex flex-col gap-5 shadow-xs">
-            <div className="border-b theme-border pb-4 flex items-center justify-between">
+        {/* AIS Data Authority Setting */}
+        <div className="theme-panel border rounded-[38px] p-8 flex flex-col gap-5 shadow-xs">
+          <div className="border-b theme-border pb-4 flex items-center justify-between">
               <div>
                 <h3 className="font-heading text-2xl uppercase tracking-wide">
                   AIS DATA FEED AUTHORITY
@@ -273,7 +246,6 @@ export default function ProfilePage() {
               </button>
             </div>
           </div>
-        </div>
       </div>
     </div>
   );
