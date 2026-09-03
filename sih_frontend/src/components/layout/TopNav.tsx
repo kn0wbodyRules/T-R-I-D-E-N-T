@@ -93,13 +93,9 @@ export default function TopNav() {
                     isActive ? "text-white" : "text-[#005A9C] hover:bg-[#EDF3FA]"
                   )}
                 >
-                  {/* Sliding Active Pill Highlight Animation */}
+                  {/* Active Pill Highlight */}
                   {isActive && (
-                    <motion.div
-                      layoutId="left-nav-pill"
-                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                      className="absolute inset-0 bg-[#005A9C] rounded-full -z-10 shadow-sm"
-                    />
+                    <div className="absolute inset-0 bg-[#005A9C] rounded-full -z-10 shadow-sm" />
                   )}
                   <span>{tab.label}</span>
                 </Link>
@@ -132,13 +128,9 @@ export default function TopNav() {
                       isActive ? "text-white" : "text-[#005A9C] hover:bg-[#EDF3FA]"
                     )}
                   >
-                    {/* Sliding Active Pill Highlight Animation */}
+                    {/* Active Pill Highlight */}
                     {isActive && (
-                      <motion.div
-                        layoutId="right-nav-pill"
-                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                        className="absolute inset-0 bg-[#005A9C] rounded-full -z-10 shadow-sm"
-                      />
+                      <div className="absolute inset-0 bg-[#005A9C] rounded-full -z-10 shadow-sm" />
                     )}
                     <span>{tab.label}</span>
                     {tab.badge !== undefined && tab.badge > 0 && (

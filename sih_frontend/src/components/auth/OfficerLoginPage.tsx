@@ -126,10 +126,10 @@ export default function OfficerLoginPage({ onLoginSuccess }: OfficerLoginPagePro
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="font-heading text-5xl lg:text-6xl xl:text-7xl tracking-tight uppercase leading-[0.9]"
         >
-          <span className="font-heading" style={{ WebkitTextStroke: "2px #005A9C", color: "white" }}>
+          <span className="font-climate font-heading" style={{ WebkitTextStroke: "2px #005A9C", color: "white" }}>
             OCEAN LEAKS ARE HARMFUL AND{" "}
           </span>
-          <span className="font-heading text-[#005A9C]">
+          <span className="font-climate font-heading text-[#005A9C]">
             PUNISHABLE
           </span>
         </motion.h1>
@@ -146,7 +146,7 @@ export default function OfficerLoginPage({ onLoginSuccess }: OfficerLoginPagePro
         >
           {/* Header */}
           <div className="flex flex-col items-center text-center gap-2">
-            <h1 className="text-4xl font-heading font-extrabold tracking-wide uppercase mt-2">
+            <h1 className="text-4xl font-climate font-heading font-extrabold tracking-wide uppercase mt-2">
               LOGIN
             </h1>
           </div>
