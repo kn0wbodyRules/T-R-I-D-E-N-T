@@ -1,0 +1,102 @@
+services:
+  postgres:
+    build: ./db
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+    # Host port 5433 — 5432 is taken by another project's container on this machine.
+    # Container-internal networking still uses 5432, so DATABASE_URL is unaffected.
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_models:/root/.ollama
+    ports:
+      - "11434:11434"
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  fastapi:
+    build: ./backend
+    env_file: .env
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/tests:/app/tests
+      - ./backend/alembic:/app/alembic
+      # Scenes and datasets are large; they live on the host and are referenced
+      # by path from sar_scenes.local_path.
+      - ./data:/data
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+
+  # One-off training and inference jobs, not a standing service:
+  #   docker compose run --rm ml python -m app.cli train-segmentation
+  # Separate from `fastapi` so multi-GB torch wheels stay out of the hot-reload
+  # API image, and so a training run that pins the GPU for hours cannot take the
+  # API down with it. Both mount the same ./backend/app, so there is no
+  # duplicated code — only the dependency set differs.
+  ml:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.ml
+    env_file: .env
+    volumes:
+      - ./backend/app:/app/app
+      - ./data:/data
+      # Training archives live on an external drive, outside the repo. Read-only:
+      # extraction writes to /data, and the originals are the only copy of a
+      # ~98 GB download that took days.
+      - ${TRAINING_ARCHIVE_DIR:-./data/archives}:/archives:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # DataLoader workers hand tensors to the parent through /dev/shm, and
+    # Docker's 64 MB default is nowhere near enough — batches fail with an
+    # opaque "No space left on device" that points at shm, not the disk.
+    shm_size: "8gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  adminer:
+    image: adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  ollama_models:

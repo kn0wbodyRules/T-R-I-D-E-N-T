@@ -1,0 +1,35 @@
+-r requirements.txt
+
+# This GPU (RTX 5070) is Blackwell, compute capability 12.0 / sm_120. Wheels built
+# against older CUDA toolchains carry no sm_120 kernels, and the failure mode is
+# nasty: the device enumerates fine and only the first real kernel launch raises
+# "no kernel image is available for execution on the device". Pin the cu128 index.
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch>=2.7
+torchvision>=0.22
+
+segmentation-models-pytorch>=0.3
+albumentations
+numpy
+scipy
+
+# rasterio's manylinux wheels have bundled GDAL since 1.3, so no libgdal-dev.
+rasterio
+# Equal-area reprojection for polygon areas; treating lon/lat degrees as a flat
+# plane overstates area badly at Mediterranean latitudes.
+pyproj
+# headless: the GUI build needs libGL, which a slim image does not carry.
+opencv-python-headless
+
+py7zr
+tqdm
+
+# Stage 4-5: backward drift modeling and its forcing data.
+opendrift
+copernicusmarine
+cdsapi
+
+# Stage 6-8: candidate clustering and attribution scoring.
+scikit-learn
+xgboost
+shap

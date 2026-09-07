@@ -22,3 +22,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Backend (Python/FastAPI)
+.env
+backend/__pycache__/
+**/__pycache__/
+*.pyc
+backend/.venv/
+backend/venv/
+*.egg-info/
+.pytest_cache/
+data/*
+!data/.gitkeep
