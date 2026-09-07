@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import clsx from "clsx";
@@ -72,7 +72,26 @@ export default function IncidentLayout({
   const incidentId = resolvedParams.id;
   const pathname = usePathname();
   const router = useRouter();
-  const { activeIncident } = useIncident();
+  const { activeIncident, activeIncidentId, setActiveIncidentId, setAisMode } = useIncident();
+
+  // Keep the shared incident context in sync with the URL's own incident id
+  // -- a direct link, a hard refresh, or opening this route in a new tab
+  // otherwise leaves the sidebar showing whichever incident the context
+  // last defaulted to, while this page's own data (fetched from the URL
+  // param directly) is for a different incident entirely.
+  useEffect(() => {
+    if (incidentId && incidentId !== activeIncidentId) {
+      setActiveIncidentId(incidentId);
+    }
+  }, [incidentId, activeIncidentId, setActiveIncidentId]);
+
+  // The Corsica-2018 case genuinely runs on a demonstration AIS feed (real
+  // vessel names from the BEA mer report, but no certified live AIS
+  // ingestion) -- the report page's own text says so explicitly, so the
+  // "real AIS" banner mode must match rather than contradict it.
+  useEffect(() => {
+    setAisMode(incidentId === "CORSICA-2018" ? "synthetic" : "real");
+  }, [incidentId, setAisMode]);
 
   const [showcaseOpen, setShowcaseOpen] = useState(false);
 

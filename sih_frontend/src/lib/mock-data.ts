@@ -1,3 +1,18 @@
+import {
+  CORSICA_INCIDENT_ID,
+  fetchRealAlerts,
+  fetchRealCandidates,
+  fetchRealDetectionResult,
+  fetchRealDriftOrigin,
+  fetchRealIncidentCard,
+  fetchRealRanking,
+  fetchRealReport,
+  fetchRealValidationCase,
+  fetchRealVesselDetail,
+} from "./real-api";
+
+export { CORSICA_INCIDENT_ID };
+
 // GeoJSON Types
 export type GeoPoint = {
   type: "Point";
@@ -166,6 +181,22 @@ export const MOCK_INCIDENTS: IncidentCard[] = [
     region: "Andaman Sea / Malacca Entry",
     timestamp: "2026-09-02 09:40 UTC",
     area_km2: 8.15,
+  },
+  {
+    // Static fallback shown immediately (and if the live backend is
+    // unreachable) -- real values recorded from this project's own
+    // Steps 1-8 CLI runs against DriftEstimate 11. fetchIncidents() below
+    // tries to live-refresh this entry from the backend on every load.
+    incident_id: CORSICA_INCIDENT_ID,
+    name: "Corsica Ferry Collision — Cap Corse",
+    thumbnail_url: "/images/corsica_quicklook.png",
+    detection_confidence: 0.27,
+    top_candidate: { name: "CSL VIRGINIA", score: 0.939, is_dark: false },
+    status: "Complete",
+    severity_rank: 1,
+    region: "Mediterranean Sea / Cap Corse, Corsica (France)",
+    timestamp: "2018-10-08 05:27 UTC",
+    area_km2: 5.75,
   },
 ];
 
@@ -903,42 +934,106 @@ export const MOCK_ALERTS: Alert[] = [
 // ==========================================
 
 export async function fetchIncidents(): Promise<IncidentCard[]> {
-  // Swappable single function per contract
-  await new Promise((r) => setTimeout(r, 80));
-  return MOCK_INCIDENTS;
+  // Swappable single function per contract. The Corsica entry is live-
+  // refreshed from the real backend on every load; on any failure (backend
+  // down, network error) the static real-recorded fallback already in
+  // MOCK_INCIDENTS is left in place so the dashboard never breaks.
+  try {
+    const real = await fetchRealIncidentCard();
+    return MOCK_INCIDENTS.map((inc) => (inc.incident_id === CORSICA_INCIDENT_ID ? real : inc));
+  } catch (err) {
+    console.warn("Real backend unreachable for incident list, using recorded fallback:", err);
+    return MOCK_INCIDENTS;
+  }
 }
 
 export async function fetchIncidentById(id: string): Promise<IncidentCard | null> {
+  if (id === CORSICA_INCIDENT_ID) {
+    try {
+      return await fetchRealIncidentCard();
+    } catch (err) {
+      console.warn("Real backend unreachable for Corsica incident card, using recorded fallback:", err);
+      return MOCK_INCIDENTS.find((inc) => inc.incident_id === CORSICA_INCIDENT_ID) || null;
+    }
+  }
   await new Promise((r) => setTimeout(r, 60));
   return MOCK_INCIDENTS.find((inc) => inc.incident_id === id) || MOCK_INCIDENTS[0];
 }
 
 export async function fetchDetectionResult(incidentId: string): Promise<DetectionResult> {
+  if (incidentId === CORSICA_INCIDENT_ID) {
+    try {
+      return await fetchRealDetectionResult();
+    } catch (err) {
+      console.warn("Real backend unreachable for Corsica detection, using mock fallback:", err);
+      return MOCK_DETECTIONS["INC-2026-0892"];
+    }
+  }
   await new Promise((r) => setTimeout(r, 80));
   return MOCK_DETECTIONS[incidentId] || MOCK_DETECTIONS["INC-2026-0892"];
 }
 
 export async function fetchDriftOrigin(incidentId: string): Promise<DriftOrigin> {
+  if (incidentId === CORSICA_INCIDENT_ID) {
+    try {
+      return await fetchRealDriftOrigin();
+    } catch (err) {
+      console.warn("Real backend unreachable for Corsica drift origin, using mock fallback:", err);
+      return MOCK_DRIFT_ORIGINS["INC-2026-0892"];
+    }
+  }
   await new Promise((r) => setTimeout(r, 80));
   return MOCK_DRIFT_ORIGINS[incidentId] || MOCK_DRIFT_ORIGINS["INC-2026-0892"];
 }
 
 export async function fetchCandidates(incidentId: string): Promise<Candidate[]> {
+  if (incidentId === CORSICA_INCIDENT_ID) {
+    try {
+      return await fetchRealCandidates();
+    } catch (err) {
+      console.warn("Real backend unreachable for Corsica candidates, using mock fallback:", err);
+      return MOCK_CANDIDATES["INC-2026-0892"];
+    }
+  }
   await new Promise((r) => setTimeout(r, 80));
   return MOCK_CANDIDATES[incidentId] || MOCK_CANDIDATES["INC-2026-0892"];
 }
 
 export async function fetchVesselDetail(vesselId: string): Promise<VesselDetail> {
+  if (vesselId.startsWith("real-mmsi-") || vesselId.startsWith("real-dark-")) {
+    try {
+      return await fetchRealVesselDetail(vesselId);
+    } catch (err) {
+      console.warn("Real backend unreachable for vessel detail, using mock fallback:", err);
+      return MOCK_VESSEL_DETAILS["v-dark-7702"];
+    }
+  }
   await new Promise((r) => setTimeout(r, 80));
   return MOCK_VESSEL_DETAILS[vesselId] || MOCK_VESSEL_DETAILS["v-dark-7702"];
 }
 
 export async function fetchRanking(incidentId: string): Promise<RankingResponse> {
+  if (incidentId === CORSICA_INCIDENT_ID) {
+    try {
+      return await fetchRealRanking();
+    } catch (err) {
+      console.warn("Real backend unreachable for Corsica ranking, using mock fallback:", err);
+      return MOCK_RANKINGS["INC-2026-0892"];
+    }
+  }
   await new Promise((r) => setTimeout(r, 80));
   return MOCK_RANKINGS[incidentId] || MOCK_RANKINGS["INC-2026-0892"];
 }
 
 export async function fetchReport(incidentId: string): Promise<Report> {
+  if (incidentId === CORSICA_INCIDENT_ID) {
+    try {
+      return await fetchRealReport();
+    } catch (err) {
+      console.warn("Real backend unreachable for Corsica report, using mock fallback:", err);
+      return MOCK_REPORTS["INC-2026-0892"];
+    }
+  }
   await new Promise((r) => setTimeout(r, 80));
   return MOCK_REPORTS[incidentId] || MOCK_REPORTS["INC-2026-0892"];
 }
@@ -947,6 +1042,15 @@ export async function updateReportResolution(
   incidentId: string,
   resolution: { status: "unresolved" | "resolved"; reason_code?: string; notes?: string }
 ): Promise<Report> {
+  if (incidentId === CORSICA_INCIDENT_ID) {
+    // The real report has no mutable backing store (it's derived live from
+    // the pipeline's own DB rows each fetch) -- patch a fresh copy in place
+    // rather than falling through to MOCK_REPORTS's default, which would
+    // silently replace this incident's real report text with Mumbai's on
+    // the next fetch (both cached under the same react-query key shape).
+    const current = await fetchReport(incidentId);
+    return { ...current, resolution };
+  }
   await new Promise((r) => setTimeout(r, 100));
   const current = MOCK_REPORTS[incidentId] || MOCK_REPORTS["INC-2026-0892"];
   current.resolution = resolution;
@@ -954,11 +1058,21 @@ export async function updateReportResolution(
 }
 
 export async function fetchValidationCases(): Promise<ValidationCase[]> {
-  await new Promise((r) => setTimeout(r, 80));
-  return MOCK_VALIDATION_CASES;
+  try {
+    const realCorsica = await fetchRealValidationCase();
+    return [realCorsica, MOCK_VALIDATION_CASES.find((c) => c.incident_name === "2024 Singapore")!].filter(Boolean);
+  } catch (err) {
+    console.warn("Real backend unreachable for validation cases, using recorded fallback:", err);
+    return MOCK_VALIDATION_CASES;
+  }
 }
 
 export async function fetchAlerts(): Promise<Alert[]> {
-  await new Promise((r) => setTimeout(r, 80));
-  return MOCK_ALERTS;
+  try {
+    const realAlerts = await fetchRealAlerts();
+    return [...realAlerts, ...MOCK_ALERTS];
+  } catch (err) {
+    console.warn("Real backend unreachable for alerts, using mock fallback:", err);
+    return MOCK_ALERTS;
+  }
 }

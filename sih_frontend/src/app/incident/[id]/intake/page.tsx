@@ -179,7 +179,13 @@ export default function IncidentIntakePage({
                 <div className="border-t border-[rgba(0,90,156,0.08)] pt-3">
                   <span className="text-[10px] text-[#5A738E] block uppercase tracking-wider">RADAR INCIDENT COORDINATES</span>
                   <span className="text-[11px] text-[#334E68]">
-                    18.912° N, 71.845° E (EEZ Corridor)
+                    {(() => {
+                      const ring = detection.slick_polygon.coordinates[0];
+                      if (!ring?.length) return "Coordinates unavailable";
+                      const lng = ring.reduce((s, p) => s + p[0], 0) / ring.length;
+                      const lat = ring.reduce((s, p) => s + p[1], 0) / ring.length;
+                      return `${Math.abs(lat).toFixed(3)}° ${lat >= 0 ? "N" : "S"}, ${Math.abs(lng).toFixed(3)}° ${lng >= 0 ? "E" : "W"} (${incident?.region || "EEZ Corridor"})`;
+                    })()}
                   </span>
                 </div>
               </div>

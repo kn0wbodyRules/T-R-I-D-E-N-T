@@ -15,7 +15,15 @@ import L from "leaflet";
 import clsx from "clsx";
 import { Candidate } from "@/lib/mock-data";
 
-// Helper component to pan/zoom when center prop changes
+// Helper component to pan/zoom when center prop changes. `center` arrives
+// as a freshly-created [lat,lng] tuple on every parent re-render (not a
+// stable reference), so this compares by value and skips redundant calls --
+// otherwise, while a query is resolving, several re-renders in quick
+// succession each start a new animated `flyTo`, and overlapping/interrupted
+// Leaflet pan animations can leave the marker layer's pixel origin out of
+// sync with the tile layer's, which showed up as real candidate markers
+// rendering tens of thousands of pixels off-screen. A single immediate
+// `setView` once the real center is known avoids the animation entirely.
 function MapViewController({
   center,
   zoom,
@@ -24,8 +32,12 @@ function MapViewController({
   zoom: number;
 }) {
   const map = useMap();
+  const lastCenter = React.useRef<string | null>(null);
   useEffect(() => {
-    map.flyTo(center, zoom, { duration: 1.2 });
+    const key = `${center[0].toFixed(5)},${center[1].toFixed(5)},${zoom}`;
+    if (lastCenter.current === key) return;
+    lastCenter.current = key;
+    map.setView(center, zoom, { animate: false });
   }, [center, zoom, map]);
   return null;
 }
