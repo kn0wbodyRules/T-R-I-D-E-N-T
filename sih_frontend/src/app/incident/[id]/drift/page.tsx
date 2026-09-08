@@ -4,7 +4,7 @@ import React, { use } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import TridentMap from "@/components/map/TridentMap";
-import { fetchDriftOrigin, fetchDetectionResult } from "@/lib/mock-data";
+import { fetchDriftOrigin, fetchDetectionResult, fetchCandidates } from "@/lib/mock-data";
 
 export default function DriftOriginPage({
   params,
@@ -25,6 +25,11 @@ export default function DriftOriginPage({
     queryFn: () => fetchDetectionResult(incidentId),
   });
 
+  const { data: candidates } = useQuery({
+    queryKey: ["candidates", incidentId],
+    queryFn: () => fetchCandidates(incidentId),
+  });
+
   const slickCenter: [number, number] = drift
     ? [drift.slick_position.coordinates[1], drift.slick_position.coordinates[0]]
     : [18.912, 71.845];
@@ -35,6 +40,16 @@ export default function DriftOriginPage({
         (slickCenter[1] + drift.origin_heatmap[0].lng) / 2,
       ]
     : slickCenter;
+
+  // Real backtrack duration derived from this incident's own window, not a
+  // hardcoded figure copied from the original Mumbai mockup.
+  const backtrackHours = drift
+    ? Math.abs(
+        (new Date(drift.estimated_time_window.end.replace(" UTC", "Z").replace(" ", "T")).getTime() -
+          new Date(drift.estimated_time_window.start.replace(" UTC", "Z").replace(" ", "T")).getTime()) /
+          3_600_000
+      )
+    : null;
 
   return (
     <div className="flex-1 flex flex-col">
@@ -113,7 +128,7 @@ export default function DriftOriginPage({
                   <span className="w-4 h-0.5 border-t border-dashed border-[#005A9C] inline-block" /> Backtrack Line
                 </span>
               </div>
-              <span>SPH LAGRANGIAN BACKTRACK (T - 18.5 HRS)</span>
+              <span>SPH LAGRANGIAN BACKTRACK (T - {backtrackHours !== null ? backtrackHours.toFixed(1) : "..."} HRS)</span>
             </div>
           </div>
 
@@ -142,7 +157,7 @@ export default function DriftOriginPage({
                 </div>
 
                 <div className="border-t border-[rgba(0,90,156,0.08)] pt-3 text-[11px] text-[#334E68]">
-                  Release occurred approximately <strong className="text-[#041527]">16.5 to 22.0 hours</strong> prior to Sentinel-1 SAR pass.
+                  Release occurred up to <strong className="text-[#041527]">{backtrackHours !== null ? backtrackHours.toFixed(1) : "..."} hours</strong> prior to the SAR pass (evidence-based bound: no oil was seen in this location on the prior satellite pass).
                 </div>
               </div>
             </div>
@@ -166,12 +181,19 @@ export default function DriftOriginPage({
 
                 <div className="flex items-center justify-between">
                   <span className="text-[#5A738E]">WIND DRIFT FACTOR</span>
-                  <strong className="text-[#005A9C]">3.2% Leeway (ERA5)</strong>
+                  <strong className="text-[#005A9C]">3.0% Leeway (OpenDrift default, ERA5-forced)</strong>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <span className="text-[#5A738E]">ORIGIN CENTROID</span>
-                  <strong className="text-[#005A9C]">18.845° N, 71.745° E</strong>
+                  <strong className="text-[#005A9C]">
+                    {(() => {
+                      const points = drift.origin_heatmap;
+                      if (!points?.length) return "Unavailable";
+                      const hottest = points.reduce((best, p) => (p.intensity > best.intensity ? p : best), points[0]);
+                      return `${hottest.lat.toFixed(3)}° N, ${hottest.lng.toFixed(3)}° E`;
+                    })()}
+                  </strong>
                 </div>
               </div>
             </div>
@@ -180,7 +202,7 @@ export default function DriftOriginPage({
             <div className="bg-[#FFFFFF] border border-[rgba(0,90,156,0.18)] rounded-[38px] p-6 flex flex-col gap-3">
               <span className="font-heading text-xl text-[#005A9C] uppercase tracking-wide">AIS CORRIDOR SEARCH</span>
               <p className="text-[11px] text-[#334E68] leading-relaxed">
-                5 candidate vessels identified traversing the release envelope during the modeled backtrack window.
+                {candidates?.length ?? "..."} candidate vessel{candidates?.length === 1 ? "" : "s"} identified traversing the release envelope during the modeled backtrack window.
               </p>
 
               <button
