@@ -190,27 +190,27 @@ export default function VesselDetailDrawer({
               </div>
             )}
           </div>
+
+          {/* Drawer Footer */}
+          <div className="p-4 bg-[#F8FAFD] border-t border-[rgba(0,90,156,0.12)] flex items-center justify-between">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-[#FFFFFF] border border-[rgba(0,90,156,0.25)] text-xs text-[#005A9C] font-semibold rounded-full hover:bg-[#EDF3FA] transition-colors cursor-pointer"
+            >
+              CLOSE
+            </button>
+
+            <button
+              onClick={() => {
+                alert(`Exported forensic dossier for ${vesselName}`);
+              }}
+              className="px-5 py-2 bg-[#005A9C] hover:bg-[#00477d] text-white text-xs font-bold rounded-full border border-[#005A9C] transition-colors cursor-pointer"
+            >
+              EXPORT SUSPECT EVIDENCE
+            </button>
+          </div>
           </>
         )}
-
-        {/* Drawer Footer */}
-        <div className="p-4 bg-[#F8FAFD] border-t border-[rgba(0,90,156,0.12)] flex items-center justify-between">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-[#FFFFFF] border border-[rgba(0,90,156,0.25)] text-xs text-[#005A9C] font-semibold rounded-full hover:bg-[#EDF3FA] transition-colors cursor-pointer"
-          >
-            CLOSE
-          </button>
-
-          <button
-            onClick={() => {
-              alert(`Exported forensic dossier for ${vesselName}`);
-            }}
-            className="px-5 py-2 bg-[#005A9C] hover:bg-[#00477d] text-white text-xs font-bold rounded-full border border-[#005A9C] transition-colors cursor-pointer"
-          >
-            EXPORT SUSPECT EVIDENCE
-          </button>
-        </div>
       </aside>
     </div>
   );

@@ -13,7 +13,6 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { ShaderBackground } from "@/components/ui/heatmap-sepia";
 import clsx from "clsx";
 import { Candidate } from "@/lib/mock-data";
 
@@ -44,63 +43,77 @@ function MapViewController({
   return null;
 }
 
-import { createPortal } from "react-dom";
+/**
+ * Data-driven KDE heatmap overlay.
+ * Renders concentric circles at each actual heatmap data point.
+ * High-intensity points → red/orange, low-intensity → blue.
+ * Each point gets multiple concentric rings for a smooth gradient look.
+ */
+function KDEHeatmapLayer({ points, dimmed }: { points: { lat: number; lng: number; intensity: number }[], dimmed: boolean }) {
+  if (!points.length) return null;
 
-function MapHeatmapOverlay({ points, dimmed }: { points: { lat: number; lng: number; intensity: number }[], dimmed: boolean }) {
-  const map = useMap();
-  const [overlayDiv, setOverlayDiv] = useState<HTMLDivElement | null>(null);
+  // Sort points so lowest intensity renders first (painter's algorithm)
+  const sorted = [...points].sort((a, b) => a.intensity - b.intensity);
 
-  useEffect(() => {
-    const div = L.DomUtil.create('div', 'leaflet-heatmap-shader');
-    div.style.position = 'absolute';
-    div.style.pointerEvents = 'none';
-    div.style.mixBlendMode = 'screen';
-    div.style.zIndex = '400';
-    map.getPane('overlayPane')?.appendChild(div);
-    setOverlayDiv(div);
+  // Color ramp: intensity → [fillColor, strokeColor]
+  const getHeatColor = (intensity: number): string => {
+    if (intensity >= 0.90) return "#D32F2F";  // Deep red — hottest core
+    if (intensity >= 0.80) return "#E53935";  // Red
+    if (intensity >= 0.65) return "#F57C00";  // Orange
+    if (intensity >= 0.50) return "#FFA726";  // Light orange
+    if (intensity >= 0.35) return "#29B6F6";  // Light blue
+    return "#1565C0";                          // Deep blue — coldest edge
+  };
 
-    return () => {
-      div.remove();
-    };
-  }, [map]);
+  const baseOpacity = dimmed ? 0.15 : 0.55;
 
-  const maxPoint = React.useMemo(() => {
-    if (!points.length) return null;
-    return points.reduce((max, pt) => (pt.intensity > max.intensity ? pt : max), points[0]);
-  }, [points]);
+  return (
+    <>
+      {sorted.map((pt, idx) => {
+        const color = getHeatColor(pt.intensity);
+        // Higher intensity → smaller, tighter circles (the core)
+        // Lower intensity → larger, wider circles (the spread)
+        const outerRadius = 2200 - pt.intensity * 800;
 
-  useEffect(() => {
-    if (!maxPoint || !overlayDiv) return;
-
-    const updatePosition = () => {
-      const point = map.latLngToLayerPoint([maxPoint.lat, maxPoint.lng]);
-      // Base zoom is roughly 10 for the slick view
-      const scale = Math.pow(2, map.getZoom() - 10);
-      const size = 150 * scale; 
-      
-      overlayDiv.style.left = `${point.x - size / 2}px`;
-      overlayDiv.style.top = `${point.y - size / 2}px`;
-      overlayDiv.style.width = `${size}px`;
-      overlayDiv.style.height = `${size}px`;
-      overlayDiv.style.borderRadius = '50%';
-      overlayDiv.style.overflow = 'hidden';
-      // Radial mask to make it look like a localized KDE kernel instead of a hard square/circle
-      overlayDiv.style.maskImage = 'radial-gradient(circle, rgba(0,0,0,1) 15%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0) 65%)';
-      overlayDiv.style.webkitMaskImage = 'radial-gradient(circle, rgba(0,0,0,1) 15%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0) 65%)';
-    };
-
-    updatePosition();
-    map.on("zoom move viewreset", updatePosition);
-    return () => {
-      map.off("zoom move viewreset", updatePosition);
-    };
-  }, [map, maxPoint, overlayDiv]);
-
-  if (!overlayDiv) return null;
-
-  return createPortal(
-    <ShaderBackground className={clsx("w-full h-full transition-opacity duration-700", dimmed ? "opacity-30" : "opacity-90")} />,
-    overlayDiv
+        return (
+          <React.Fragment key={`kde-${idx}`}>
+            {/* Outer glow ring */}
+            <CircleMarker
+              center={[pt.lat, pt.lng]}
+              radius={outerRadius / 38}
+              pathOptions={{
+                fillColor: color,
+                fillOpacity: baseOpacity * 0.3 * pt.intensity,
+                stroke: false,
+              }}
+            />
+            {/* Mid ring */}
+            <CircleMarker
+              center={[pt.lat, pt.lng]}
+              radius={outerRadius / 55}
+              pathOptions={{
+                fillColor: color,
+                fillOpacity: baseOpacity * 0.55 * pt.intensity,
+                stroke: false,
+              }}
+            />
+            {/* Inner core */}
+            <CircleMarker
+              center={[pt.lat, pt.lng]}
+              radius={outerRadius / 80}
+              pathOptions={{
+                fillColor: color,
+                fillOpacity: baseOpacity * 0.8 * pt.intensity,
+                stroke: true,
+                color: color,
+                weight: pt.intensity > 0.85 ? 1.5 : 0.5,
+                opacity: baseOpacity * 0.6,
+              }}
+            />
+          </React.Fragment>
+        );
+      })}
+    </>
   );
 }
 
@@ -349,9 +362,9 @@ export default function TridentMapInner({
           attribution={basemapConfig.attribution}
         />
 
-        {/* 1. KDE Origin Heatmap Overlay (Georeferenced Shader) */}
+        {/* 1. KDE Origin Heatmap Overlay (Data-Driven Circles) */}
         {activeLayers.showHeatmap && (
-          <MapHeatmapOverlay points={heatmapPoints} dimmed={activeLayers.heatmapDimmed} />
+          <KDEHeatmapLayer points={heatmapPoints} dimmed={activeLayers.heatmapDimmed} />
         )}
 
         {/* 2. Detected Slick Polygon Overlay (Vibrant Cyan Radar Boundary) */}
@@ -469,9 +482,6 @@ export default function TridentMapInner({
             );
           })}
       </MapContainer>
-
-      {/* Global Animated Heatmap Overlay */}
-      {/* (Moved to MapHeatmapOverlay inside MapContainer) */}
 
       {/* Top-Right Floating Tactical Layer Controls */}
       <div className="absolute top-4 right-4 z-[500] bg-[#FFFFFF]/95 border border-[rgba(0,90,156,0.25)] rounded-2xl p-3 backdrop-blur-md flex flex-col gap-2 text-xs text-[#041527] select-none min-w-[185px]">
