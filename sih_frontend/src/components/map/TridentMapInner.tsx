@@ -44,6 +44,66 @@ function MapViewController({
   return null;
 }
 
+import { createPortal } from "react-dom";
+
+function MapHeatmapOverlay({ points, dimmed }: { points: { lat: number; lng: number; intensity: number }[], dimmed: boolean }) {
+  const map = useMap();
+  const [overlayDiv, setOverlayDiv] = useState<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const div = L.DomUtil.create('div', 'leaflet-heatmap-shader');
+    div.style.position = 'absolute';
+    div.style.pointerEvents = 'none';
+    div.style.mixBlendMode = 'screen';
+    div.style.zIndex = '400';
+    map.getPane('overlayPane')?.appendChild(div);
+    setOverlayDiv(div);
+
+    return () => {
+      div.remove();
+    };
+  }, [map]);
+
+  const maxPoint = React.useMemo(() => {
+    if (!points.length) return null;
+    return points.reduce((max, pt) => (pt.intensity > max.intensity ? pt : max), points[0]);
+  }, [points]);
+
+  useEffect(() => {
+    if (!maxPoint || !overlayDiv) return;
+
+    const updatePosition = () => {
+      const point = map.latLngToLayerPoint([maxPoint.lat, maxPoint.lng]);
+      // Base zoom is roughly 10 for the slick view
+      const scale = Math.pow(2, map.getZoom() - 10);
+      const size = 1800 * scale; 
+      
+      overlayDiv.style.left = `${point.x - size / 2}px`;
+      overlayDiv.style.top = `${point.y - size / 2}px`;
+      overlayDiv.style.width = `${size}px`;
+      overlayDiv.style.height = `${size}px`;
+      overlayDiv.style.borderRadius = '50%';
+      overlayDiv.style.overflow = 'hidden';
+      // Radial mask to make it look like a localized KDE kernel instead of a hard square/circle
+      overlayDiv.style.maskImage = 'radial-gradient(circle, rgba(0,0,0,1) 15%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0) 65%)';
+      overlayDiv.style.webkitMaskImage = 'radial-gradient(circle, rgba(0,0,0,1) 15%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0) 65%)';
+    };
+
+    updatePosition();
+    map.on("zoom move viewreset", updatePosition);
+    return () => {
+      map.off("zoom move viewreset", updatePosition);
+    };
+  }, [map, maxPoint, overlayDiv]);
+
+  if (!overlayDiv) return null;
+
+  return createPortal(
+    <ShaderBackground className={clsx("w-full h-full transition-opacity duration-700", dimmed ? "opacity-30" : "opacity-90")} />,
+    overlayDiv
+  );
+}
+
 // Leaflet custom vessel marker icon generators
 function createVesselLeafletIcon(
   isDark: boolean,
@@ -289,8 +349,10 @@ export default function TridentMapInner({
           attribution={basemapConfig.attribution}
         />
 
-        {/* 1. KDE Origin Heatmap Overlay (Replaced by global ShaderBackground) */}
-        {/* Rendered outside MapContainer below */}
+        {/* 1. KDE Origin Heatmap Overlay (Georeferenced Shader) */}
+        {activeLayers.showHeatmap && (
+          <MapHeatmapOverlay points={heatmapPoints} dimmed={activeLayers.heatmapDimmed} />
+        )}
 
         {/* 2. Detected Slick Polygon Overlay (Vibrant Cyan Radar Boundary) */}
         {activeLayers.showSlickPolygon && polygonLatLngs.length > 2 && (
@@ -409,11 +471,7 @@ export default function TridentMapInner({
       </MapContainer>
 
       {/* Global Animated Heatmap Overlay */}
-      {activeLayers.showHeatmap && (
-        <div className={clsx("absolute inset-0 z-[400] pointer-events-none mix-blend-screen transition-opacity duration-700", activeLayers.heatmapDimmed ? "opacity-30" : "opacity-65")}>
-          <ShaderBackground className="w-full h-full" />
-        </div>
-      )}
+      {/* (Moved to MapHeatmapOverlay inside MapContainer) */}
 
       {/* Top-Right Floating Tactical Layer Controls */}
       <div className="absolute top-4 right-4 z-[500] bg-[#FFFFFF]/95 border border-[rgba(0,90,156,0.25)] rounded-2xl p-3 backdrop-blur-md flex flex-col gap-2 text-xs text-[#041527] select-none min-w-[185px]">
