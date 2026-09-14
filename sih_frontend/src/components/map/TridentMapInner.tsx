@@ -12,6 +12,8 @@ import {
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { ShaderBackground } from "@/components/ui/heatmap-sepia";
 import clsx from "clsx";
 import { Candidate } from "@/lib/mock-data";
 
@@ -287,38 +289,8 @@ export default function TridentMapInner({
           attribution={basemapConfig.attribution}
         />
 
-        {/* 1. KDE Origin Heatmap Overlay with Luminous Dispersion Gradient */}
-        {activeLayers.showHeatmap &&
-          heatmapPoints.map((pt, idx) => {
-            const isDimmed = activeLayers.heatmapDimmed;
-            const opacity = isDimmed ? pt.intensity * 0.35 : pt.intensity * 0.8;
-            const radius = 950 + (1 - pt.intensity) * 1100;
-
-            const fillColor =
-              pt.intensity > 0.85
-                ? "#EF3E42"
-                : pt.intensity > 0.65
-                ? "#F97316"
-                : pt.intensity > 0.45
-                ? "#FFB800"
-                : "#00D2FF";
-
-            return (
-              <CircleMarker
-                key={`heat-${idx}`}
-                center={[pt.lat, pt.lng]}
-                radius={radius / 40}
-                pathOptions={{
-                  fillColor,
-                  fillOpacity: opacity,
-                  stroke: true,
-                  color: fillColor,
-                  weight: pt.intensity > 0.85 ? 2 : 0.8,
-                  opacity: opacity * 0.9,
-                }}
-              />
-            );
-          })}
+        {/* 1. KDE Origin Heatmap Overlay (Replaced by global ShaderBackground) */}
+        {/* Rendered outside MapContainer below */}
 
         {/* 2. Detected Slick Polygon Overlay (Vibrant Cyan Radar Boundary) */}
         {activeLayers.showSlickPolygon && polygonLatLngs.length > 2 && (
@@ -435,6 +407,13 @@ export default function TridentMapInner({
             );
           })}
       </MapContainer>
+
+      {/* Global Animated Heatmap Overlay */}
+      {activeLayers.showHeatmap && (
+        <div className={clsx("absolute inset-0 z-[400] pointer-events-none mix-blend-screen transition-opacity duration-700", activeLayers.heatmapDimmed ? "opacity-30" : "opacity-65")}>
+          <ShaderBackground className="w-full h-full" />
+        </div>
+      )}
 
       {/* Top-Right Floating Tactical Layer Controls */}
       <div className="absolute top-4 right-4 z-[500] bg-[#FFFFFF]/95 border border-[rgba(0,90,156,0.25)] rounded-2xl p-3 backdrop-blur-md flex flex-col gap-2 text-xs text-[#041527] select-none min-w-[185px]">
