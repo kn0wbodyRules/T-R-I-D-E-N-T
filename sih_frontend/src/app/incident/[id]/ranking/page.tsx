@@ -7,6 +7,7 @@ import clsx from "clsx";
 import ConfidenceBar from "@/components/ui/ConfidenceBar";
 import VesselIcon from "@/components/map/VesselIcon";
 import VesselDetailDrawer from "@/components/vessel/VesselDetailDrawer";
+import { LeaderboardPodium } from "@/components/ui/leaderboard-podium";
 import { fetchRanking } from "@/lib/mock-data";
 import { useIncident } from "@/components/providers/IncidentContext";
 
@@ -91,6 +92,20 @@ export default function AttributionRankingPage({
                 {ranking.margin_note}
               </p>
             </div>
+          </div>
+
+          {/* Top Suspects Podium */}
+          <div className="bg-[#FFFFFF] border border-[rgba(0,90,156,0.18)] rounded-[38px] p-8 flex flex-col items-center justify-center pt-16">
+            <LeaderboardPodium
+              rankings={ranking.rows.map((r, idx) => ({
+                userId: r.vessel_id,
+                userName: r.name_or_unidentified,
+                rank: idx + 1,
+                value: r.confidence_score,
+                isDark: r.is_dark,
+              }))}
+              size="lg"
+            />
           </div>
 
           {/* Suspect Ranking Table */}
