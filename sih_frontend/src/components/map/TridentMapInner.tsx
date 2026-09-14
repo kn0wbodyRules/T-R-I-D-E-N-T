@@ -76,7 +76,7 @@ function MapHeatmapOverlay({ points, dimmed }: { points: { lat: number; lng: num
       const point = map.latLngToLayerPoint([maxPoint.lat, maxPoint.lng]);
       // Base zoom is roughly 10 for the slick view
       const scale = Math.pow(2, map.getZoom() - 10);
-      const size = 1800 * scale; 
+      const size = 800 * scale; 
       
       overlayDiv.style.left = `${point.x - size / 2}px`;
       overlayDiv.style.top = `${point.y - size / 2}px`;
