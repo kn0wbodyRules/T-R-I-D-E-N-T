@@ -203,7 +203,7 @@ export const MOCK_INCIDENTS: IncidentCard[] = [
 export const MOCK_DETECTIONS: Record<string, DetectionResult> = {
   "INC-2026-0892": {
     incident_id: "INC-2026-0892",
-    scene_image_url: "/sar_mumbai_sector4.jpg",
+    scene_image_url: "/images/validation/corsica-prediction.jpg",
     slick_polygon: {
       type: "Polygon",
       coordinates: [
@@ -230,7 +230,7 @@ export const MOCK_DETECTIONS: Record<string, DetectionResult> = {
   },
   "INC-2026-0887": {
     incident_id: "INC-2026-0887",
-    scene_image_url: "/sar_mannar.jpg",
+    scene_image_url: "/images/sar_sentinel1_raw.jpg",
     slick_polygon: {
       type: "Polygon",
       coordinates: [
@@ -257,7 +257,7 @@ export const MOCK_DETECTIONS: Record<string, DetectionResult> = {
   },
   "INC-2026-0901": {
     incident_id: "INC-2026-0901",
-    scene_image_url: "/sar_malacca.jpg",
+    scene_image_url: "/images/validation/singapore-prediction.jpg",
     slick_polygon: {
       type: "Polygon",
       coordinates: [
@@ -280,6 +280,33 @@ export const MOCK_DETECTIONS: Record<string, DetectionResult> = {
     satellite_pass_utc: "2026-09-02 09:35:42 UTC",
     wind_speed_kts: 4.2,
     sea_state: 1,
+  },
+  [CORSICA_INCIDENT_ID]: {
+    incident_id: CORSICA_INCIDENT_ID,
+    scene_image_url: "/images/validation/corsica-prediction.jpg",
+    slick_polygon: {
+      type: "Polygon",
+      coordinates: [
+        [
+          [9.350, 42.980],
+          [9.410, 43.010],
+          [9.470, 43.040],
+          [9.450, 43.000],
+          [9.380, 42.970],
+          [9.350, 42.980],
+        ],
+      ],
+    },
+    detection_confidence: 0.942,
+    area_km2: 5.75,
+    orientation_deg: 52.0,
+    elongation_ratio: 4.10,
+    age_bracket: "10–18 hrs",
+    filtered_lookalikes_count: 5,
+    sensor_source: "Sentinel-1A C-SAR (Interferometric Wide, VV)",
+    satellite_pass_utc: "2018-10-08 05:27:10 UTC",
+    wind_speed_kts: 6.8,
+    sea_state: 2,
   },
 };
 
