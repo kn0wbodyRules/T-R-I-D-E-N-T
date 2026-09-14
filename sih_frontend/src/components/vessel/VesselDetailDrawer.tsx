@@ -14,6 +14,17 @@ interface VesselDetailDrawerProps {
   onClose: () => void;
 }
 
+const getVesselImage = (id: string) => {
+  const images = [
+    "https://images.unsplash.com/photo-1559416523-140ddc3d238c?w=800&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1577717903315-1691ae25ab3f?w=800&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1542382156909-9ae37b3f56fd?w=800&auto=format&fit=crop&q=80",
+  ];
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash += id.charCodeAt(i);
+  return images[hash % images.length];
+};
+
 export default function VesselDetailDrawer({
   vesselId,
   onClose,
@@ -29,7 +40,7 @@ export default function VesselDetailDrawer({
   const vesselName = vessel?.vessel_info?.name || vessel?.vessel_id || "UNIDENTIFIED RADAR TARGET";
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 z-[1000] flex justify-end">
       {/* Backdrop */}
       <div
         onClick={onClose}
@@ -37,59 +48,84 @@ export default function VesselDetailDrawer({
       />
 
       {/* Slide-over Panel (Curved Left Edge) */}
-      <aside className="relative z-10 w-full max-w-xl bg-[#FFFFFF] border-l border-[rgba(0,90,156,0.2)] rounded-l-[38px] flex flex-col h-full overflow-hidden">
-        {/* Drawer Header */}
-        <div className="p-6 bg-[#F8FAFD] border-b border-[rgba(0,90,156,0.12)] flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <VesselIcon isDark={vessel?.is_dark || false} size="md" />
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-heading text-2xl text-[#005A9C] uppercase tracking-wide">
-                  {vesselName}
-                </span>
-                {vessel?.is_dark && (
-                  <span className="text-[9px] bg-[#EF3E42] text-white px-2 py-0.5 rounded-full font-bold">
-                    DARK TARGET
-                  </span>
-                )}
-              </div>
-              <span className="text-[11px] text-[#5A738E]">
-                ID: {vessel?.vessel_id} {vessel?.vessel_info?.imo ? `· IMO: ${vessel.vessel_info.imo}` : ""} · FLAG: {vessel?.vessel_info?.flag || "UNKNOWN"}
-              </span>
-            </div>
-          </div>
-
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-[#EDF3FA] text-[#5A738E] hover:text-[#005A9C] rounded-full transition-colors cursor-pointer"
-          >
-            <MaterialIcon name="close" size={20} />
-          </button>
-        </div>
-
-        {/* Drawer Scrollable Body */}
+      <aside className="relative z-10 w-full max-w-xl bg-[#FFFFFF] border-l border-[rgba(0,90,156,0.2)] rounded-l-[38px] flex flex-col h-full overflow-hidden shadow-2xl">
+        
         {isLoading || !vessel ? (
-          <div className="p-12 text-center text-xs text-[#5A738E]">
-            LOADING SUSPECT DOSSIER...
+          <div className="flex-1 flex flex-col">
+            <div className="p-6 flex justify-end">
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-[#EDF3FA] text-[#5A738E] hover:text-[#005A9C] rounded-full transition-colors cursor-pointer"
+              >
+                <MaterialIcon name="close" size={20} />
+              </button>
+            </div>
+            <div className="flex-1 flex items-center justify-center text-xs text-[#5A738E]">
+              LOADING SUSPECT DOSSIER...
+            </div>
           </div>
         ) : (
-          <div className="p-6 flex-1 overflow-y-auto flex flex-col gap-6 text-xs text-[#334E68]">
-            {/* Attribution Culpability Score */}
-            <div className="p-5 bg-[#F8FAFD] border border-[rgba(0,90,156,0.15)] rounded-3xl flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-[#5A738E] uppercase tracking-wider font-semibold">
-                  ENSEMBLE CULPABILITY ATTRIBUTION
-                </span>
-                <span className="font-heading text-2xl text-[#005A9C]">
-                  {(vessel.attribution_score * 100).toFixed(1)}%
-                </span>
+          <>
+            {/* Hero Banner Header */}
+            <div className="relative h-64 w-full flex-shrink-0 bg-[#041527]">
+              {/* Image Background */}
+              <img 
+                src={getVesselImage(vessel.vessel_id)} 
+                className="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-90"
+                alt={vesselName}
+              />
+              {/* Gradient Overlay for Text Readability */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#041527] via-[#041527]/60 to-transparent" />
+              
+              {/* Close Button */}
+              <button
+                onClick={onClose}
+                className="absolute top-6 right-6 p-2 bg-black/30 hover:bg-black/50 text-white rounded-full transition-colors cursor-pointer backdrop-blur-md z-10"
+              >
+                <MaterialIcon name="close" size={20} />
+              </button>
+
+              {/* Bottom Info Bar */}
+              <div className="absolute bottom-0 left-0 right-0 p-6 flex items-end justify-between z-10">
+                {/* Left: Ship Name and Details */}
+                <div className="flex flex-col text-white">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-heading text-3xl tracking-wide text-white drop-shadow-md">
+                      {vesselName}
+                    </span>
+                    {vessel.is_dark && (
+                      <span className="text-[10px] bg-[#EF3E42] text-white px-2 py-0.5 rounded-full font-bold shadow-sm">
+                        DARK TARGET
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] text-white/90 font-medium tracking-wide drop-shadow-md">
+                    ID: {vessel.vessel_id} {vessel.vessel_info?.imo ? `· IMO: ${vessel.vessel_info.imo}` : ""} · FLAG: {vessel.vessel_info?.flag || "UNKNOWN"}
+                  </span>
+                </div>
+
+                {/* Right: Culpability Score */}
+                <div className="flex flex-col items-end text-white drop-shadow-md">
+                  <span className="text-[10px] text-white/90 uppercase tracking-wider font-semibold mb-1">
+                    ENSEMBLE CULPABILITY
+                  </span>
+                  <span className={clsx("font-heading text-4xl", vessel.is_dark ? "text-[#EF3E42]" : "text-[#00D2FF]")}>
+                    {(vessel.attribution_score * 100).toFixed(1)}%
+                  </span>
+                </div>
               </div>
-              <ConfidenceBar
-                value={vessel.attribution_score}
-                isDark={vessel.is_dark}
-                showScore={false}
+            </div>
+
+            {/* Confidence Bar (Full Width across bottom of banner) */}
+            <div className="w-full h-1.5 bg-[#E2E8F0] flex-shrink-0">
+              <div 
+                className={clsx("h-full transition-all duration-1000", vessel.is_dark ? "bg-[#EF3E42]" : "bg-[#00D2FF]")}
+                style={{ width: `${vessel.attribution_score * 100}%` }}
               />
             </div>
+
+            {/* Drawer Scrollable Body */}
+            <div className="p-6 flex-1 overflow-y-auto flex flex-col gap-6 text-xs text-[#334E68]">
 
             {/* AIS Trajectory Gap Callout (for Dark Vessels) */}
             {vessel.is_dark && (
@@ -154,6 +190,7 @@ export default function VesselDetailDrawer({
               </div>
             )}
           </div>
+          </>
         )}
 
         {/* Drawer Footer */}
