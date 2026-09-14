@@ -16,9 +16,9 @@ interface VesselDetailDrawerProps {
 
 const getVesselImage = (id: string) => {
   const images = [
-    "https://images.unsplash.com/photo-1559416523-140ddc3d238c?w=800&auto=format&fit=crop&q=80",
-    "https://images.unsplash.com/photo-1577717903315-1691ae25ab3f?w=800&auto=format&fit=crop&q=80",
-    "https://images.unsplash.com/photo-1542382156909-9ae37b3f56fd?w=800&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1518527989017-5baca7a58d3c?w=800&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1585713181935-d5f622cc2415?w=800&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1606185540834-d6e7483ee1a4?w=800&auto=format&fit=crop&q=80",
   ];
   let hash = 0;
   for (let i = 0; i < id.length; i++) hash += id.charCodeAt(i);
