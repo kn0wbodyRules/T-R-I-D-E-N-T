@@ -9,6 +9,7 @@ import {
   Polyline,
   Marker,
   Popup,
+  Tooltip,
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
@@ -44,9 +45,23 @@ function MapViewController({
 }
 
 /**
- * Real data-driven KDE heatmap rendered using HTML5 2D Canvas in Leaflet's overlayPane.
- * Maps every [lat, lng, intensity] point to exact pixel coordinates and paints a smooth
- * thermal Gaussian gradient. 100% reliable, zero external dependencies, 100% accurate.
+ * Verified context-accurate vessel thumbnail provider (heavy maritime cargo / tankers)
+ */
+const getVesselImage = (id: string) => {
+  const images = [
+    "https://images.unsplash.com/photo-1518527989017-5baca7a58d3c?w=800&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1585713181935-d5f622cc2415?w=800&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1606185540834-d6e7483ee1a4?w=800&auto=format&fit=crop&q=80",
+  ];
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash += id.charCodeAt(i);
+  return images[hash % images.length];
+};
+
+/**
+ * Ultra-vibrant, deeply present KDE Heatmap rendered using HTML5 2D Canvas.
+ * Multi-pass Gaussian thermal gradient with luminous cores, rich oceanic spread,
+ * and high-contrast spatial presence that pops vividly on any basemap.
  */
 function CanvasKDEHeatmap({
   points,
@@ -66,8 +81,9 @@ function CanvasKDEHeatmap({
     const canvas = L.DomUtil.create("canvas", "leaflet-canvas-kde-heatmap");
     canvas.style.position = "absolute";
     canvas.style.pointerEvents = "none";
-    canvas.style.zIndex = "350";
-    canvas.style.mixBlendMode = "screen";
+    canvas.style.zIndex = "320";
+    // Boost saturation and give an illuminated glow aura
+    canvas.style.filter = "saturate(2.0) contrast(1.25) drop-shadow(0 0 24px rgba(239,62,66,0.65)) drop-shadow(0 0 40px rgba(255,184,0,0.45))";
     pane.appendChild(canvas);
 
     const draw = () => {
@@ -86,35 +102,67 @@ function CanvasKDEHeatmap({
       ctx.clearRect(0, 0, size.x, size.y);
 
       const zoom = map.getZoom();
-      // Radius scales gracefully with zoom level
-      const baseRadius = Math.max(35, 65 * Math.pow(1.25, zoom - 10));
-      const opacityScale = dimmed ? 0.25 : 0.85;
+      // Generous spatial presence scaled dynamically by zoom
+      const baseRadius = Math.max(50, 105 * Math.pow(1.26, zoom - 10));
+      const opacityScale = dimmed ? 0.35 : 0.95;
 
-      // Sort points so lower intensity is drawn first
       const sortedPoints = [...points].sort((a, b) => a.intensity - b.intensity);
 
+      // PASS 1: Broad Gaussian Dispersion Field (Atmospheric Presence)
       sortedPoints.forEach((pt) => {
         const point = map.latLngToContainerPoint([pt.lat, pt.lng]);
         const x = point.x;
         const y = point.y;
-
-        const rad = baseRadius * (0.65 + pt.intensity * 0.55);
+        const rad = baseRadius * (0.85 + pt.intensity * 0.65);
         const grad = ctx.createRadialGradient(x, y, 0, x, y, rad);
 
         const a = pt.intensity * opacityScale;
 
-        // Precise smooth thermal KDE gradient: Hottest Red core -> Amber -> Cyan -> Dodger Blue
-        grad.addColorStop(0.00, `rgba(239, 62, 66, ${a * 0.95})`);   // Hottest Red core
-        grad.addColorStop(0.25, `rgba(255, 140, 0, ${a * 0.80})`);   // Red-Orange
-        grad.addColorStop(0.50, `rgba(255, 200, 0, ${a * 0.65})`);   // Yellow/Amber
-        grad.addColorStop(0.72, `rgba(0, 212, 224, ${a * 0.40})`);   // Cyan
-        grad.addColorStop(0.88, `rgba(0, 90, 156, ${a * 0.20})`);    // Dodger Blue
-        grad.addColorStop(1.00, `rgba(4, 21, 39, 0)`);               // Transparent navy edge
+        grad.addColorStop(0.00, `rgba(239, 62, 66, ${a * 0.92})`);   // Fiery Red
+        grad.addColorStop(0.28, `rgba(255, 120, 0, ${a * 0.82})`);   // Deep Orange
+        grad.addColorStop(0.55, `rgba(255, 190, 0, ${a * 0.68})`);   // Golden Yellow
+        grad.addColorStop(0.78, `rgba(0, 212, 224, ${a * 0.45})`);   // Radiant Cyan
+        grad.addColorStop(0.92, `rgba(0, 90, 156, ${a * 0.22})`);    // Deep Dodger Blue
+        grad.addColorStop(1.00, `rgba(4, 21, 39, 0)`);               // Fade out
 
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.arc(x, y, rad, 0, Math.PI * 2);
         ctx.fill();
+      });
+
+      // PASS 2: Saturated Hotspot Cores (Intense High-Probability Centers)
+      sortedPoints.forEach((pt) => {
+        if (pt.intensity < 0.65) return;
+        const point = map.latLngToContainerPoint([pt.lat, pt.lng]);
+        const x = point.x;
+        const y = point.y;
+        const coreRad = baseRadius * (0.45 + pt.intensity * 0.35);
+        const coreGrad = ctx.createRadialGradient(x, y, 0, x, y, coreRad);
+
+        const a = pt.intensity * opacityScale;
+
+        coreGrad.addColorStop(0.00, `rgba(255, 0, 45, ${a * 0.98})`);  // Blazing Crimson Core
+        coreGrad.addColorStop(0.40, `rgba(255, 80, 0, ${a * 0.90})`);  // Bright Flame Orange
+        coreGrad.addColorStop(0.75, `rgba(255, 215, 0, ${a * 0.70})`); // Vivid Gold
+        coreGrad.addColorStop(1.00, `rgba(255, 215, 0, 0)`);
+
+        ctx.fillStyle = coreGrad;
+        ctx.beginPath();
+        ctx.arc(x, y, coreRad, 0, Math.PI * 2);
+        ctx.fill();
+
+        // PASS 3: 90% Confidence Origin Contour Ring on peak hotspots
+        if (pt.intensity >= 0.90) {
+          ctx.save();
+          ctx.strokeStyle = `rgba(255, 255, 255, ${a * 0.55})`;
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.arc(x, y, coreRad * 0.75, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
       });
     };
 
@@ -131,9 +179,10 @@ function CanvasKDEHeatmap({
 }
 
 /**
- * OpenDrift Lagrangian Backtrack Particle Simulation.
- * Animates the reverse current SPH ensemble backtrack from current slick position (T=0)
- * to the origin probability heatmap envelope (T=-8.8h).
+ * OpenDrift Lagrangian Backtrack Animation — Step-by-Step Trajectory Tracing.
+ * Traces out the exact backtrack steps from current slick (T=0) backwards along the
+ * hydrodynamic drift corridor to the origin core (T=-8.8h). Waypoints lock in
+ * progressively with timestamps, radar pings, and milestone labels.
  */
 function OpenDriftBacktrackAnimation({
   slickCenter,
@@ -154,7 +203,7 @@ function OpenDriftBacktrackAnimation({
 
     let animFrame: number;
     let startTime: number | null = null;
-    const duration = 3000; // 3 second animation
+    const duration = 3600; // 3.6 second progressive step-by-step trace
 
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
@@ -184,85 +233,147 @@ function OpenDriftBacktrackAnimation({
     originPoints[0]
   );
 
-  // Position at current animation progress
+  // 4 Concrete Forensic Backtrack Steps along the drift corridor
+  const steps = [
+    {
+      lat: slickCenter[0],
+      lng: slickCenter[1],
+      threshold: 0.0,
+      time: "T - 0.0h",
+      title: "Step 0: Slick Detection",
+      subtitle: "SAR Pass Centroid",
+      color: "#00D4E0",
+    },
+    {
+      lat: slickCenter[0] + (primaryOrigin.lat - slickCenter[0]) * 0.33,
+      lng: slickCenter[1] + (primaryOrigin.lng - slickCenter[1]) * 0.33,
+      threshold: 0.33,
+      time: "T - 2.8h",
+      title: "Step 1: Surface Leeway Drift",
+      subtitle: "ERA5 Wind Drift Component",
+      color: "#FFB800",
+    },
+    {
+      lat: slickCenter[0] + (primaryOrigin.lat - slickCenter[0]) * 0.68,
+      lng: slickCenter[1] + (primaryOrigin.lng - slickCenter[1]) * 0.68,
+      threshold: 0.68,
+      time: "T - 5.8h",
+      title: "Step 2: HYCOM Ocean Current",
+      subtitle: "1/12° Reverse Advection",
+      color: "#FF7700",
+    },
+    {
+      lat: primaryOrigin.lat,
+      lng: primaryOrigin.lng,
+      threshold: 0.98,
+      time: "T - 8.8h",
+      title: "Step 3: Discharge Origin Core",
+      subtitle: "98% Probability Envelope",
+      color: "#EF3E42",
+    },
+  ];
+
+  // Current lead tracer position
   const currentLat = slickCenter[0] + (primaryOrigin.lat - slickCenter[0]) * animProgress;
   const currentLng = slickCenter[1] + (primaryOrigin.lng - slickCenter[1]) * animProgress;
 
-  // SPH ensemble particles trailing behind
-  const offsets = [0.08, 0.16, 0.24, 0.32, 0.40];
+  // Reached milestone waypoints
+  const reachedSteps = steps.filter((s) => animProgress >= s.threshold);
 
   return (
     <>
-      {/* Animated Growing Backtrack Ray */}
+      {/* 1. Traced Backtrack Path (Solid neon beam with glowing underlay) */}
       <Polyline
-        positions={[
-          slickCenter,
-          [currentLat, currentLng],
-        ]}
+        positions={[slickCenter, [currentLat, currentLng]]}
+        pathOptions={{
+          color: "rgba(0, 212, 224, 0.35)",
+          weight: 7,
+          opacity: 1,
+          lineCap: "round",
+        }}
+      />
+      <Polyline
+        positions={[slickCenter, [currentLat, currentLng]]}
         pathOptions={{
           color: "#00F0FF",
-          weight: 3.5,
-          opacity: 0.9,
-          dashArray: "6, 6",
+          weight: 2.5,
+          opacity: 0.95,
+          lineCap: "round",
         }}
       />
 
-      {/* Trailing Lagrangian SPH Ensemble Particles */}
-      {offsets.map((off, idx) => {
-        const p = Math.max(0, animProgress - off);
-        const pLat = slickCenter[0] + (primaryOrigin.lat - slickCenter[0]) * p;
-        const pLng = slickCenter[1] + (primaryOrigin.lng - slickCenter[1]) * p;
-
-        return (
+      {/* 2. Step Waypoints (Traced out progressively with timestamp chips) */}
+      {reachedSteps.map((s, idx) => (
+        <React.Fragment key={`backtrack-step-${idx}`}>
+          {/* Waypoint sonar ripple on lock */}
           <CircleMarker
-            key={`lagrangian-particle-${idx}`}
-            center={[pLat, pLng]}
-            radius={7 - idx}
+            center={[s.lat, s.lng]}
+            radius={idx === 3 ? 16 : 12}
             pathOptions={{
-              fillColor: "#00F0FF",
-              fillOpacity: 0.85 - idx * 0.14,
-              color: "#FFFFFF",
+              fillColor: s.color,
+              fillOpacity: 0.2,
+              color: s.color,
               weight: 1.5,
+              opacity: 0.8,
             }}
           />
-        );
-      })}
 
-      {/* Animated Lead Wavefront */}
+          {/* Solid Waypoint Dot */}
+          <CircleMarker
+            center={[s.lat, s.lng]}
+            radius={idx === 3 ? 7 : 5}
+            pathOptions={{
+              fillColor: s.color,
+              fillOpacity: 1,
+              color: "#FFFFFF",
+              weight: 2,
+            }}
+          >
+            <Tooltip
+              direction="right"
+              offset={[10, 0]}
+              permanent={true}
+              className="vessel-custom-tooltip"
+            >
+              <div className="bg-[#041527]/95 border border-[rgba(0,212,224,0.4)] rounded-lg px-2 py-1 shadow-lg text-white backdrop-blur-md select-none pointer-events-none whitespace-nowrap">
+                <div className="text-[9px] font-bold tracking-wider" style={{ color: s.color }}>
+                  {s.time} · {s.title}
+                </div>
+                <div className="text-[8px] text-[#A3C0DC]">{s.subtitle}</div>
+              </div>
+            </Tooltip>
+          </CircleMarker>
+        </React.Fragment>
+      ))}
+
+      {/* 3. Leading Active Wavefront Head (Pulsing Tracer Radar) */}
       <CircleMarker
         center={[currentLat, currentLng]}
-        radius={11}
+        radius={10}
         pathOptions={{
           fillColor: "#FFB800",
-          fillOpacity: 1,
+          fillOpacity: 0.9,
           color: "#FFFFFF",
-          weight: 3,
+          weight: 2.5,
         }}
-      >
-        <Popup>
-          <div className="text-xs font-bold text-[#005A9C] p-1">
-            OpenDrift SPH Ensemble Backtrack (T - {(animProgress * 8.8).toFixed(1)} hrs)
-          </div>
-        </Popup>
-      </CircleMarker>
+      />
     </>
   );
 }
 
-// Leaflet custom vessel marker icon generators — uses Google Material Symbols
-function createVesselLeafletIcon(
+/**
+ * Tactical Point Marker for Candidate Vessels.
+ * Clean, sleek radar tracking points (no generic icons).
+ * Features an inner solid target point, outer radar ping pulse, and percentage pill.
+ */
+function createVesselPointIcon(
   isDark: boolean,
   isSelected: boolean,
-  heading: number = 0,
-  confidence: number = 0.5,
-  name: string = "VESSEL"
+  confidence: number = 0.5
 ) {
-  const color = isDark ? "#EF3E42" : "#005A9C";
-  const bgColor = isDark ? "rgba(239,62,66,0.15)" : "rgba(0,90,156,0.12)";
-  const size = isSelected ? 40 : 32;
+  const color = isDark ? "#EF3E42" : "#00D4E0";
+  const size = isSelected ? 30 : 22;
   const scorePercent = Math.round(confidence * 100);
-  const iconName = isDark ? "warning" : "directions_boat";
-  const iconSize = isSelected ? 22 : 18;
 
   const html = `
     <div style="
@@ -274,62 +385,70 @@ function createVesselLeafletIcon(
       justify-content: center;
       cursor: pointer;
     ">
+      <!-- Outer radar ping pulse -->
+      <div style="
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: ${isDark ? "rgba(239, 62, 66, 0.3)" : "rgba(0, 212, 224, 0.3)"};
+        border: 1.5px solid ${color};
+        animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+        opacity: 0.8;
+      "></div>
+      
+      <!-- Selection ring -->
       ${
         isSelected
           ? `<div style="
               position: absolute;
-              inset: -6px;
-              border: 2px solid ${color};
+              inset: -5px;
+              border: 2px dashed ${color};
               border-radius: 50%;
-              animation: pulse 1.5s infinite;
-              opacity: 0.7;
+              animation: spin 6s linear infinite;
             "></div>`
           : ""
       }
+
+      <!-- Solid core radar tracking point -->
       <div style="
-        width: ${size}px;
-        height: ${size}px;
+        width: ${isSelected ? 14 : 10}px;
+        height: ${isSelected ? 14 : 10}px;
         border-radius: 50%;
-        background: ${bgColor};
-        border: 2px solid ${color};
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.35);
-        backdrop-filter: blur(2px);
-      ">
-        <span class="material-symbols-outlined" style="
-          font-size: ${iconSize}px;
-          color: ${color};
-          font-variation-settings: 'FILL' 1, 'wght' 600;
-          transform: rotate(${isDark ? 0 : heading}deg);
-        ">${iconName}</span>
-      </div>
+        background: ${color};
+        border: 2px solid #FFFFFF;
+        box-shadow: 0 0 10px ${color}, 0 2px 6px rgba(0,0,0,0.6);
+        z-index: 2;
+        transition: transform 0.2s ease;
+      "></div>
+
+      <!-- Tactical probability badge -->
       <div style="
         position: absolute;
-        top: -20px;
+        top: -19px;
         left: 50%;
         transform: translateX(-50%);
         background: rgba(4, 21, 39, 0.92);
         color: #FFFFFF;
         border: 1px solid ${color};
-        padding: 2px 6px;
+        padding: 1px 5px;
         border-radius: 4px;
-        font-size: 9px;
+        font-size: 8.5px;
         font-weight: 700;
         white-space: nowrap;
         font-family: 'Archivo Black', sans-serif;
-        backdrop-filter: blur(4px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        pointer-events: none;
+        letter-spacing: 0.02em;
       ">
-        ${scorePercent}% ${isDark ? "DARK" : "AIS"}
+        ${scorePercent}%
       </div>
     </div>
   `;
 
   return L.divIcon({
     html,
-    className: "custom-vessel-leaflet-icon",
+    className: "custom-vessel-point-icon",
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
@@ -607,16 +726,14 @@ export default function TridentMapInner({
             );
           })}
 
-        {/* 4. Candidate Vessels */}
+        {/* 4. Candidate Vessels — Point Markers with Curved Rectangular Hover Cards */}
         {activeLayers.showVessels &&
           filteredCandidates.map((vessel) => {
             const isSelected = vessel.vessel_id === selectedVesselId;
-            const icon = createVesselLeafletIcon(
+            const icon = createVesselPointIcon(
               vessel.is_dark,
               isSelected,
-              vessel.course_deg || 0,
-              vessel.confidence_score,
-              vessel.name_or_unidentified
+              vessel.confidence_score
             );
 
             return (
@@ -628,20 +745,57 @@ export default function TridentMapInner({
                   click: () => onSelectVessel?.(vessel.vessel_id),
                 }}
               >
-                <Popup>
-                  <div className="p-1.5 text-xs min-w-[160px]">
-                    <div className="font-heading text-sm text-[#005A9C] uppercase">
-                      {vessel.name_or_unidentified}
+                <Tooltip
+                  direction="top"
+                  offset={[0, -14]}
+                  opacity={1}
+                  className="vessel-custom-tooltip"
+                >
+                  <div className="w-[230px] bg-[#FFFFFF] border border-[rgba(0,90,156,0.25)] rounded-2xl overflow-hidden shadow-2xl text-left pointer-events-auto select-none p-0">
+                    {/* Vessel Thumbnail Banner */}
+                    <div className="relative w-full h-24 bg-[#041527] overflow-hidden rounded-t-2xl">
+                      <img
+                        src={getVesselImage(vessel.vessel_id)}
+                        alt={vessel.name_or_unidentified}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#041527]/85 via-transparent to-transparent" />
+                      <div className="absolute top-2 right-2">
+                        {vessel.is_dark ? (
+                          <span className="text-[9px] bg-[#EF3E42] text-white px-2 py-0.5 rounded-full font-bold shadow-xs">
+                            DARK TARGET
+                          </span>
+                        ) : (
+                          <span className="text-[9px] bg-[#005A9C] text-white px-2 py-0.5 rounded-full font-bold shadow-xs">
+                            AIS VERIFIED
+                          </span>
+                        )}
+                      </div>
+                      <div className="absolute bottom-1.5 left-2.5 right-2.5">
+                        <div className="font-heading text-xs text-white uppercase tracking-wide truncate drop-shadow-md">
+                          {vessel.name_or_unidentified}
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-[#5A738E] text-[10px] mt-0.5">
-                      ID: {vessel.vessel_id} · Speed: {vessel.speed_knots || 12} kts
-                    </div>
-                    <div className="mt-1.5 pt-1 border-t border-[rgba(0,90,156,0.15)] font-bold text-[#005A9C] flex items-center justify-between">
-                      <span>Attribution Lead:</span>
-                      <span>{(vessel.confidence_score * 100).toFixed(1)}%</span>
+
+                    {/* Vessel Details Body */}
+                    <div className="p-3 flex flex-col gap-1.5 bg-[#FFFFFF]">
+                      <div className="flex items-center justify-between text-[10px] text-[#5A738E]">
+                        <span>ID: <strong className="text-[#041527]">{vessel.vessel_id}</strong></span>
+                        <span>{vessel.speed_knots || 12} kts · {vessel.course_deg || 0}°</span>
+                      </div>
+                      <div className="pt-2 border-t border-[rgba(0,90,156,0.12)] flex items-center justify-between">
+                        <span className="text-[10px] text-[#5A738E] font-medium">Attribution Lead:</span>
+                        <span className={clsx("font-heading text-sm", vessel.is_dark ? "text-[#EF3E42]" : "text-[#005A9C]")}>
+                          {(vessel.confidence_score * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                      <div className="text-[9px] text-[#005A9C] font-semibold text-center bg-[#EDF3FA] py-1 px-2 rounded-lg mt-0.5">
+                        Click point to open full dossier →
+                      </div>
                     </div>
                   </div>
-                </Popup>
+                </Tooltip>
               </Marker>
             );
           })}

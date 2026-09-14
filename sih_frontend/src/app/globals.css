@@ -168,6 +168,19 @@
   ::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 90, 156, 0.4);
   }
+
+  /* Custom Leaflet Tooltip for Vessel Points (Clean transparent container for React Card) */
+  .leaflet-tooltip.vessel-custom-tooltip {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+  .leaflet-tooltip.vessel-custom-tooltip::before {
+    display: none !important;
+  }
 }
 
 /* =========================================================
