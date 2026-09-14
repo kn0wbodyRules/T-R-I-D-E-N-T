@@ -150,10 +150,14 @@ function NauticalGraticule({ show }: { show: boolean }) {
     };
 
     draw();
-    map.on("move zoom viewreset resize", draw);
+    const rafId = requestAnimationFrame(draw);
+    const timer1 = setTimeout(draw, 60);
+    map.on("move zoom viewreset resize layeradd", draw);
 
     return () => {
-      map.off("move zoom viewreset resize", draw);
+      cancelAnimationFrame(rafId);
+      clearTimeout(timer1);
+      map.off("move zoom viewreset resize layeradd", draw);
       canvas.remove();
     };
   }, [map, show]);
@@ -162,9 +166,10 @@ function NauticalGraticule({ show }: { show: boolean }) {
 }
 
 /**
- * Calibrated Oceanographic KDE Probability Envelope.
- * Renders structured scientific probability contour envelopes (90% Core, 75% Inner, 50% Mid, 25% Dispersion)
- * matching OpenDrift and NOAA GNOME contour outputs instead of a blurry airbrush smear.
+ * Calibrated, Highly-Visible Oceanographic KDE Probability Envelope.
+ * Renders a rich, luminous, multi-pass Gaussian KDE thermal dispersion plume
+ * (Crimson Core -> Coral Flame -> Radiant Amber -> Golden Dispersion)
+ * that is clearly visible and continuous across satellite, ocean, and dark charts.
  */
 function CanvasKDEHeatmap({
   points,
@@ -185,7 +190,7 @@ function CanvasKDEHeatmap({
     canvas.style.position = "absolute";
     canvas.style.pointerEvents = "none";
     canvas.style.zIndex = "320";
-    canvas.style.opacity = dimmed ? "0.35" : "0.82";
+    canvas.style.opacity = dimmed ? "0.40" : "0.92";
     pane.appendChild(canvas);
 
     const draw = () => {
@@ -204,48 +209,95 @@ function CanvasKDEHeatmap({
       ctx.clearRect(0, 0, size.x, size.y);
 
       const zoom = map.getZoom();
-      const baseRadius = Math.max(26, 44 * Math.pow(1.16, zoom - 10));
+      // Prominent, generous spatial presence that cleanly fuses origin points into a corridor
+      const baseRadius = Math.max(65, 115 * Math.pow(1.22, zoom - 10));
+      const opacityScale = dimmed ? 0.45 : 1.0;
 
       const sortedPoints = [...points].sort((a, b) => a.intensity - b.intensity);
 
-      // Render structured Gaussian KDE probability envelopes
+      // PASS 1: Broad, luminous thermal dispersion field (Atmospheric & Hydrodynamic Presence)
       sortedPoints.forEach((pt) => {
         const point = map.latLngToContainerPoint([pt.lat, pt.lng]);
         const x = point.x;
         const y = point.y;
-        const rad = baseRadius * (0.8 + pt.intensity * 0.4);
+        const rad = baseRadius * (0.85 + pt.intensity * 0.55);
 
         const grad = ctx.createRadialGradient(x, y, 0, x, y, rad);
-        const a = pt.intensity;
+        const a = pt.intensity * opacityScale;
 
-        // Multi-level scientific probability ramp with defined contour bands
-        grad.addColorStop(0.00, `rgba(220, 38, 38, ${a * 0.92})`); // P >= 90% Primary Core
-        grad.addColorStop(0.32, `rgba(234, 88, 12, ${a * 0.78})`); // P >= 75% Inner Envelope
-        grad.addColorStop(0.60, `rgba(217, 119, 6, ${a * 0.52})`); // P >= 50% Mid Envelope
-        grad.addColorStop(0.85, `rgba(30, 58, 138, ${a * 0.25})`); // P >= 25% Dispersion
-        grad.addColorStop(1.00, `rgba(4, 21, 39, 0)`);             // Zero boundary
+        // Radiant, pure thermal spectrum — NO blue/cyan to eliminate rainbow artifacts
+        grad.addColorStop(0.00, `rgba(239, 68, 68, ${a * 0.95})`);   // Radiant Crimson
+        grad.addColorStop(0.24, `rgba(249, 115, 22, ${a * 0.88})`);  // Vivid Coral Flame
+        grad.addColorStop(0.52, `rgba(245, 158, 11, ${a * 0.72})`);  // Luminous Warm Amber
+        grad.addColorStop(0.78, `rgba(251, 191, 36, ${a * 0.38})`);  // Golden Halo
+        grad.addColorStop(1.00, `rgba(251, 191, 36, 0)`);            // Smooth transparent fade
 
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.arc(x, y, rad, 0, Math.PI * 2);
         ctx.fill();
-
-        // Subtle scientific isobar contour ring for highest confidence point
-        if (pt.intensity >= 0.9) {
-          ctx.strokeStyle = "rgba(239, 68, 68, 0.75)";
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.arc(x, y, rad * 0.35, 0, Math.PI * 2);
-          ctx.stroke();
-        }
       });
+
+      // PASS 2: Saturated high-probability discharge core for focal centers
+      sortedPoints.forEach((pt) => {
+        if (pt.intensity < 0.65) return;
+        const point = map.latLngToContainerPoint([pt.lat, pt.lng]);
+        const x = point.x;
+        const y = point.y;
+        const coreRad = baseRadius * (0.42 + pt.intensity * 0.32);
+
+        const coreGrad = ctx.createRadialGradient(x, y, 0, x, y, coreRad);
+        const a = pt.intensity * opacityScale;
+
+        coreGrad.addColorStop(0.00, `rgba(255, 20, 60, ${a * 0.98})`);  // Deep Intense Core
+        coreGrad.addColorStop(0.40, `rgba(255, 90, 20, ${a * 0.86})`);  // Bright Flame Orange
+        coreGrad.addColorStop(0.75, `rgba(255, 190, 0, ${a * 0.45})`);  // Vivid Gold
+        coreGrad.addColorStop(1.00, `rgba(255, 190, 0, 0)`);
+
+        ctx.fillStyle = coreGrad;
+        ctx.beginPath();
+        ctx.arc(x, y, coreRad, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // PASS 3: Scientific Probability Isobar Contours
+      if (sortedPoints.length > 0) {
+        const hottest = sortedPoints[sortedPoints.length - 1];
+        const hPoint = map.latLngToContainerPoint([hottest.lat, hottest.lng]);
+
+        // 90% Probability Core Isobar (Crimson dashed circle)
+        ctx.save();
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.arc(hPoint.x, hPoint.y, baseRadius * 0.45, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 75% Probability Corridor Isobar (Amber dashed circle)
+        ctx.strokeStyle = "rgba(245, 158, 11, 0.65)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.arc(hPoint.x, hPoint.y, baseRadius * 0.85, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
     };
 
     draw();
-    map.on("move zoom viewreset resize", draw);
+    // Schedule asynchronous redraws to ensure rendering even if container size initializes late
+    const rafId = requestAnimationFrame(draw);
+    const timer1 = setTimeout(draw, 60);
+    const timer2 = setTimeout(draw, 250);
+
+    map.on("move zoom viewreset resize layeradd", draw);
 
     return () => {
-      map.off("move zoom viewreset resize", draw);
+      cancelAnimationFrame(rafId);
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      map.off("move zoom viewreset resize layeradd", draw);
       canvas.remove();
     };
   }, [map, points, dimmed]);
