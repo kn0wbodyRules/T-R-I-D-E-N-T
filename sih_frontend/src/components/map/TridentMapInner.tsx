@@ -43,81 +43,89 @@ function MapViewController({
   return null;
 }
 
+import { createPortal } from "react-dom";
+import { ShaderBackground } from "@/components/ui/heatmap-sepia";
+
 /**
- * Data-driven KDE heatmap overlay.
- * Renders concentric circles at each actual heatmap data point.
- * High-intensity points → red/orange, low-intensity → blue.
- * Each point gets multiple concentric rings for a smooth gradient look.
+ * Geo-referenced WebGL shader heatmap.
+ * Computes the bounding box of ALL data points, adds padding, and positions
+ * the shader canvas exactly over that geographic extent inside Leaflet's
+ * overlay pane. The shader's natural radial hot-center maps to the
+ * highest-intensity origin point.
  */
-function KDEHeatmapLayer({ points, dimmed }: { points: { lat: number; lng: number; intensity: number }[], dimmed: boolean }) {
-  if (!points.length) return null;
+function GeoReferencedShaderHeatmap({ points, dimmed }: { points: { lat: number; lng: number; intensity: number }[], dimmed: boolean }) {
+  const map = useMap();
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const [ready, setReady] = React.useState(false);
 
-  // Sort points so lowest intensity renders first (painter's algorithm)
-  const sorted = [...points].sort((a, b) => a.intensity - b.intensity);
+  // Compute geographic bounds from data
+  const bounds = React.useMemo(() => {
+    if (!points.length) return null;
+    const lats = points.map(p => p.lat);
+    const lngs = points.map(p => p.lng);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs);
+    const maxLng = Math.max(...lngs);
+    // Add 80% padding so the shader edge bleeds naturally
+    const latPad = (maxLat - minLat) * 0.8;
+    const lngPad = (maxLng - minLng) * 0.8;
+    return L.latLngBounds(
+      [minLat - latPad, minLng - lngPad],
+      [maxLat + latPad, maxLng + lngPad]
+    );
+  }, [points]);
 
-  // Color ramp: intensity → [fillColor, strokeColor]
-  const getHeatColor = (intensity: number): string => {
-    if (intensity >= 0.90) return "#D32F2F";  // Deep red — hottest core
-    if (intensity >= 0.80) return "#E53935";  // Red
-    if (intensity >= 0.65) return "#F57C00";  // Orange
-    if (intensity >= 0.50) return "#FFA726";  // Light orange
-    if (intensity >= 0.35) return "#29B6F6";  // Light blue
-    return "#1565C0";                          // Deep blue — coldest edge
-  };
+  useEffect(() => {
+    if (!bounds) return;
+    const div = L.DomUtil.create("div", "leaflet-shader-heatmap");
+    div.style.position = "absolute";
+    div.style.pointerEvents = "none";
+    div.style.zIndex = "250";
+    // Circular soft-edge mask so the shader fades naturally at edges
+    div.style.borderRadius = "50%";
+    div.style.overflow = "hidden";
+    div.style.maskImage = "radial-gradient(ellipse at center, rgba(0,0,0,1) 20%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.3) 65%, rgba(0,0,0,0) 80%)";
+    div.style.webkitMaskImage = div.style.maskImage;
+    map.getPane("overlayPane")?.appendChild(div);
+    containerRef.current = div;
+    setReady(true);
 
-  const baseOpacity = dimmed ? 0.15 : 0.55;
+    const updatePosition = () => {
+      const nw = map.latLngToLayerPoint(bounds.getNorthWest());
+      const se = map.latLngToLayerPoint(bounds.getSouthEast());
+      const w = se.x - nw.x;
+      const h = se.y - nw.y;
+      div.style.left = `${nw.x}px`;
+      div.style.top = `${nw.y}px`;
+      div.style.width = `${w}px`;
+      div.style.height = `${h}px`;
+    };
+    updatePosition();
+    map.on("zoom move viewreset", updatePosition);
 
-  return (
-    <>
-      {sorted.map((pt, idx) => {
-        const color = getHeatColor(pt.intensity);
-        // Higher intensity → smaller, tighter circles (the core)
-        // Lower intensity → larger, wider circles (the spread)
-        const outerRadius = 2200 - pt.intensity * 800;
+    return () => {
+      map.off("zoom move viewreset", updatePosition);
+      div.remove();
+      containerRef.current = null;
+      setReady(false);
+    };
+  }, [map, bounds]);
 
-        return (
-          <React.Fragment key={`kde-${idx}`}>
-            {/* Outer glow ring */}
-            <CircleMarker
-              center={[pt.lat, pt.lng]}
-              radius={outerRadius / 38}
-              pathOptions={{
-                fillColor: color,
-                fillOpacity: baseOpacity * 0.3 * pt.intensity,
-                stroke: false,
-              }}
-            />
-            {/* Mid ring */}
-            <CircleMarker
-              center={[pt.lat, pt.lng]}
-              radius={outerRadius / 55}
-              pathOptions={{
-                fillColor: color,
-                fillOpacity: baseOpacity * 0.55 * pt.intensity,
-                stroke: false,
-              }}
-            />
-            {/* Inner core */}
-            <CircleMarker
-              center={[pt.lat, pt.lng]}
-              radius={outerRadius / 80}
-              pathOptions={{
-                fillColor: color,
-                fillOpacity: baseOpacity * 0.8 * pt.intensity,
-                stroke: true,
-                color: color,
-                weight: pt.intensity > 0.85 ? 1.5 : 0.5,
-                opacity: baseOpacity * 0.6,
-              }}
-            />
-          </React.Fragment>
-        );
-      })}
-    </>
+  if (!ready || !containerRef.current) return null;
+
+  return createPortal(
+    <ShaderBackground
+      className={clsx(
+        "w-full h-full transition-opacity duration-700",
+        dimmed ? "opacity-25" : "opacity-75"
+      )}
+    />,
+    containerRef.current
   );
 }
 
-// Leaflet custom vessel marker icon generators
+// Leaflet custom vessel marker icon generators — uses Google Material Symbols
 function createVesselLeafletIcon(
   isDark: boolean,
   isSelected: boolean,
@@ -126,8 +134,11 @@ function createVesselLeafletIcon(
   name: string = "VESSEL"
 ) {
   const color = isDark ? "#EF3E42" : "#005A9C";
-  const size = isSelected ? 36 : 28;
+  const bgColor = isDark ? "rgba(239,62,66,0.15)" : "rgba(0,90,156,0.12)";
+  const size = isSelected ? 40 : 32;
   const scorePercent = Math.round(confidence * 100);
+  const iconName = isDark ? "warning" : "directions_boat";
+  const iconSize = isSelected ? 22 : 18;
 
   const html = `
     <div style="
@@ -143,32 +154,36 @@ function createVesselLeafletIcon(
         isSelected
           ? `<div style="
               position: absolute;
-              inset: -8px;
+              inset: -6px;
               border: 2px solid ${color};
               border-radius: 50%;
               animation: pulse 1.5s infinite;
-              opacity: 0.9;
+              opacity: 0.7;
             "></div>`
           : ""
       }
       <div style="
         width: ${size}px;
         height: ${size}px;
-        transform: rotate(${heading}deg);
-        filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
+        border-radius: 50%;
+        background: ${bgColor};
+        border: 2px solid ${color};
         display: flex;
         align-items: center;
         justify-content: center;
-        color: ${isDark ? "#EF3E42" : "#005A9C"};
+        box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+        backdrop-filter: blur(2px);
       ">
-        <svg width="100%" height="100%" viewBox="0 0 24 24" fill="currentColor" stroke="white" stroke-width="1.5" stroke-linejoin="round">
-          <!-- Professional Vessel Hull Top-Down -->
-          <path d="M12 2.5L17.5 9V20C17.5 20.8 16.8 21.5 16 21.5H8C7.2 21.5 6.5 20.8 6.5 20V9L12 2.5Z" />
-        </svg>
+        <span class="material-symbols-outlined" style="
+          font-size: ${iconSize}px;
+          color: ${color};
+          font-variation-settings: 'FILL' 1, 'wght' 600;
+          transform: rotate(${isDark ? 0 : heading}deg);
+        ">${iconName}</span>
       </div>
       <div style="
         position: absolute;
-        top: -18px;
+        top: -20px;
         left: 50%;
         transform: translateX(-50%);
         background: rgba(4, 21, 39, 0.92);
@@ -179,7 +194,7 @@ function createVesselLeafletIcon(
         font-size: 9px;
         font-weight: 700;
         white-space: nowrap;
-        font-family: 'Valley Sans', sans-serif;
+        font-family: 'Archivo Black', sans-serif;
         backdrop-filter: blur(4px);
         box-shadow: 0 2px 4px rgba(0,0,0,0.3);
       ">
@@ -362,9 +377,9 @@ export default function TridentMapInner({
           attribution={basemapConfig.attribution}
         />
 
-        {/* 1. KDE Origin Heatmap Overlay (Data-Driven Circles) */}
+        {/* 1. KDE Origin Heatmap — Geo-referenced WebGL Shader */}
         {activeLayers.showHeatmap && (
-          <KDEHeatmapLayer points={heatmapPoints} dimmed={activeLayers.heatmapDimmed} />
+          <GeoReferencedShaderHeatmap points={heatmapPoints} dimmed={activeLayers.heatmapDimmed} />
         )}
 
         {/* 2. Detected Slick Polygon Overlay (Vibrant Cyan Radar Boundary) */}
