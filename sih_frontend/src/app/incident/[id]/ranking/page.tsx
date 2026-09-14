@@ -105,6 +105,7 @@ export default function AttributionRankingPage({
                 isDark: r.is_dark,
               }))}
               size="lg"
+              showAvatar={false}
             />
           </div>
 

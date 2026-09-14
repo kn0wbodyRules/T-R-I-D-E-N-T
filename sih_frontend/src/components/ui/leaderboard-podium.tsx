@@ -135,9 +135,9 @@ const LeaderboardPodium = React.forwardRef<
           
           // Use default suspect avatar if none provided (stock cargo ships)
           const fallbackAvatars = {
-            1: "https://images.unsplash.com/photo-1596484552993-9c8e88e8913b?auto=format&fit=crop&q=80&w=150&h=150",
-            2: "https://images.unsplash.com/photo-1543888352-70b561c6b1a3?auto=format&fit=crop&q=80&w=150&h=150",
-            3: "https://images.unsplash.com/photo-1588607739775-6e4697a2cb6e?auto=format&fit=crop&q=80&w=150&h=150"
+            1: "https://images.unsplash.com/photo-1559416523-140ddc3d238c?w=150&auto=format&fit=crop&q=80",
+            2: "https://images.unsplash.com/photo-1577717903315-1691ae25ab3f?w=150&auto=format&fit=crop&q=80",
+            3: "https://images.unsplash.com/photo-1542382156909-9ae37b3f56fd?w=150&auto=format&fit=crop&q=80"
           };
           const avatarSrc = ranking.avatarUrl ?? fallbackAvatars[ranking.rank as 1|2|3];
 
