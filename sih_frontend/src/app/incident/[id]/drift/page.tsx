@@ -119,16 +119,16 @@ export default function DriftOriginPage({
                   <span className="w-2.5 h-2.5 bg-[#EF3E42] rounded-xs inline-block" /> 90%+ Origin Core
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 bg-[#F97316] rounded-xs inline-block" /> 70% Confidence
+                  <span className="w-2.5 h-2.5 bg-[#F97316] rounded-xs inline-block" /> 75% Inner Envelope
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 bg-[#005A9C] rounded-xs inline-block" /> Current Slick
+                  <span className="w-2.5 h-2.5 bg-[#0284C7] rounded-xs inline-block" /> SAR Slick Radar Damping
                 </span>
                 <span className="flex items-center gap-1.5 text-[#041527] font-semibold">
-                  <span className="w-4 h-0.5 border-t border-dashed border-[#005A9C] inline-block" /> Backtrack Line
+                  <span className="w-4 h-0.5 border-t border-dashed border-[#38BDF8] inline-block" /> OpenDrift Advection
                 </span>
               </div>
-              <span>SPH LAGRANGIAN BACKTRACK (T - {backtrackHours !== null ? backtrackHours.toFixed(1) : "..."} HRS)</span>
+              <span className="font-mono text-[11px] font-bold text-[#005A9C]">OPENDRIFT SPH LAGRANGIAN (T - {backtrackHours !== null ? backtrackHours.toFixed(1) : "8.8"} HRS)</span>
             </div>
           </div>
 
