@@ -59,9 +59,9 @@ const getVesselImage = (id: string) => {
 };
 
 /**
- * Ultra-vibrant, deeply present KDE Heatmap rendered using HTML5 2D Canvas.
- * Multi-pass Gaussian thermal gradient with luminous cores, rich oceanic spread,
- * and high-contrast spatial presence that pops vividly on any basemap.
+ * Calibrated, authentic oceanographic KDE Heatmap rendered via HTML5 Canvas.
+ * Uses a restrained marine thermal gradient (Crimson -> Burnt Orange -> Soft Amber -> Indigo)
+ * with compact, natural Gaussian dispersion kernels to eliminate rainbow artifacts.
  */
 function CanvasKDEHeatmap({
   points,
@@ -82,8 +82,7 @@ function CanvasKDEHeatmap({
     canvas.style.position = "absolute";
     canvas.style.pointerEvents = "none";
     canvas.style.zIndex = "320";
-    // Boost saturation and give an illuminated glow aura
-    canvas.style.filter = "saturate(2.0) contrast(1.25) drop-shadow(0 0 24px rgba(239,62,66,0.65)) drop-shadow(0 0 40px rgba(255,184,0,0.45))";
+    canvas.style.opacity = dimmed ? "0.32" : "0.75";
     pane.appendChild(canvas);
 
     const draw = () => {
@@ -102,67 +101,33 @@ function CanvasKDEHeatmap({
       ctx.clearRect(0, 0, size.x, size.y);
 
       const zoom = map.getZoom();
-      // Generous spatial presence scaled dynamically by zoom
-      const baseRadius = Math.max(50, 105 * Math.pow(1.26, zoom - 10));
-      const opacityScale = dimmed ? 0.35 : 0.95;
+      // Refined radius: wraps the origin points tightly without ballooning into a dartboard
+      const baseRadius = Math.max(28, 46 * Math.pow(1.18, zoom - 10));
+      const opacityScale = dimmed ? 0.35 : 0.85;
 
       const sortedPoints = [...points].sort((a, b) => a.intensity - b.intensity);
 
-      // PASS 1: Broad Gaussian Dispersion Field (Atmospheric Presence)
+      // Smooth Gaussian KDE thermal kernel for each origin point
       sortedPoints.forEach((pt) => {
         const point = map.latLngToContainerPoint([pt.lat, pt.lng]);
         const x = point.x;
         const y = point.y;
-        const rad = baseRadius * (0.85 + pt.intensity * 0.65);
+        const rad = baseRadius * (0.75 + pt.intensity * 0.45);
         const grad = ctx.createRadialGradient(x, y, 0, x, y, rad);
 
         const a = pt.intensity * opacityScale;
 
-        grad.addColorStop(0.00, `rgba(239, 62, 66, ${a * 0.92})`);   // Fiery Red
-        grad.addColorStop(0.28, `rgba(255, 120, 0, ${a * 0.82})`);   // Deep Orange
-        grad.addColorStop(0.55, `rgba(255, 190, 0, ${a * 0.68})`);   // Golden Yellow
-        grad.addColorStop(0.78, `rgba(0, 212, 224, ${a * 0.45})`);   // Radiant Cyan
-        grad.addColorStop(0.92, `rgba(0, 90, 156, ${a * 0.22})`);    // Deep Dodger Blue
-        grad.addColorStop(1.00, `rgba(4, 21, 39, 0)`);               // Fade out
+        // Natural, restrained oceanographic thermal ramp (NO rainbow / NO neon green)
+        grad.addColorStop(0.00, `rgba(220, 38, 38, ${a * 0.88})`);    // Deep Crimson Core
+        grad.addColorStop(0.28, `rgba(234, 88, 12, ${a * 0.72})`);    // Warm Burnt Orange
+        grad.addColorStop(0.58, `rgba(217, 119, 6, ${a * 0.45})`);    // Muted Warm Amber
+        grad.addColorStop(0.85, `rgba(30, 58, 138, ${a * 0.20})`);    // Deep Indigo Dispersion
+        grad.addColorStop(1.00, `rgba(4, 21, 39, 0)`);                // Soft transparent fade
 
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.arc(x, y, rad, 0, Math.PI * 2);
         ctx.fill();
-      });
-
-      // PASS 2: Saturated Hotspot Cores (Intense High-Probability Centers)
-      sortedPoints.forEach((pt) => {
-        if (pt.intensity < 0.65) return;
-        const point = map.latLngToContainerPoint([pt.lat, pt.lng]);
-        const x = point.x;
-        const y = point.y;
-        const coreRad = baseRadius * (0.45 + pt.intensity * 0.35);
-        const coreGrad = ctx.createRadialGradient(x, y, 0, x, y, coreRad);
-
-        const a = pt.intensity * opacityScale;
-
-        coreGrad.addColorStop(0.00, `rgba(255, 0, 45, ${a * 0.98})`);  // Blazing Crimson Core
-        coreGrad.addColorStop(0.40, `rgba(255, 80, 0, ${a * 0.90})`);  // Bright Flame Orange
-        coreGrad.addColorStop(0.75, `rgba(255, 215, 0, ${a * 0.70})`); // Vivid Gold
-        coreGrad.addColorStop(1.00, `rgba(255, 215, 0, 0)`);
-
-        ctx.fillStyle = coreGrad;
-        ctx.beginPath();
-        ctx.arc(x, y, coreRad, 0, Math.PI * 2);
-        ctx.fill();
-
-        // PASS 3: 90% Confidence Origin Contour Ring on peak hotspots
-        if (pt.intensity >= 0.90) {
-          ctx.save();
-          ctx.strokeStyle = `rgba(255, 255, 255, ${a * 0.55})`;
-          ctx.lineWidth = 1.5;
-          ctx.setLineDash([4, 4]);
-          ctx.beginPath();
-          ctx.arc(x, y, coreRad * 0.75, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.restore();
-        }
       });
     };
 
@@ -180,13 +145,12 @@ function CanvasKDEHeatmap({
 
 /**
  * Authentic OpenDrift Lagrangian Particle Ensemble Backtrack Simulation.
- * Replicates MET Norway OpenDrift / OpenOil trajectory modeling:
- * - 60 discrete Lagrangian super-particles seeded at the observed slick polygon centroid.
- * - Advected backwards in time along the reverse hydrodynamic current vector (HYCOM 1/12°) + wind leeway (ERA5).
- * - Brownian turbulent diffusion (Kxy = 10 m²/s) expands the particle swarm into an authentic probability cone.
- * - Each particle traces an individual trajectory tail (OpenDrift linecolor aesthetic).
- * - At T = -8.8h, the dispersed particle cloud settles directly over the KDE origin envelope,
- *   demonstrating the exact physical foundation of the origin probability kernel.
+ * Replicates natural ocean fluid dynamics:
+ * - 60 discrete Lagrangian super-particles with individual speed variation (velocity shear)
+ *   and gentle hydrodynamic meanders along the HYCOM 1/12° vector (038°).
+ * - Brownian turbulent diffusion (Kxy = 10 m²/s) expands the particle swarm into an organic plume.
+ * - Clean, non-intrusive waypoint nodes without permanent screen-blocking tooltips.
+ * - Particles transition smoothly from Cyan (T=0) -> Amber (T=-4h) -> Crimson (T=-8.8h).
  */
 function OpenDriftBacktrackAnimation({
   slickCenter,
@@ -204,36 +168,38 @@ function OpenDriftBacktrackAnimation({
   const map = useMap();
   const [animProgress, setAnimProgress] = useState(0);
 
-  // 60 deterministic Lagrangian super-particles
+  // 60 deterministic Lagrangian super-particles with hydrodynamic properties
   const particles = React.useMemo(() => {
     if (!originPoints || !originPoints.length) return [];
     return Array.from({ length: 60 }, (_, i) => {
-      // Seed offset inside slick (tight Gaussian cluster at T=0)
+      // Clustered seeding inside slick at T=0
       const angle = (i / 60) * Math.PI * 2;
-      const dist = ((i * 19) % 37) / 37 * 0.004;
+      const dist = ((i * 19) % 37) / 37 * 0.0035;
       const seedLatOffset = Math.sin(angle) * dist;
       const seedLngOffset = Math.cos(angle) * dist;
 
       // Target mapping across origin KDE cluster
       const targetPoint = originPoints[i % originPoints.length];
       const targetAngle = (i * 23) % 360;
-      const targetDist = ((i * 17) % 29) / 29 * 0.009;
+      const targetDist = ((i * 17) % 29) / 29 * 0.007;
       const targetLatOffset = Math.sin(targetAngle) * targetDist;
       const targetLngOffset = Math.cos(targetAngle) * targetDist;
 
-      // Brownian stochastic turbulent diffusion noise parameters
-      const noisePhaseX = (i * 1.57) % (Math.PI * 2);
-      const noisePhaseY = (i * 2.71) % (Math.PI * 2);
-      const noiseAmp = 0.004 + ((i % 8) / 8) * 0.006;
+      // Natural speed variation: droplets drift at slightly varied speeds (88% to 112%)
+      const speedFactor = 0.88 + ((i * 13) % 31) / 31 * 0.24;
+
+      // Lateral turbulent diffusion & meander phase
+      const meanderPhase = (i * 1.83) % (Math.PI * 2);
+      const meanderAmp = 0.003 + ((i % 7) / 7) * 0.004;
 
       return {
         seedLatOffset,
         seedLngOffset,
         targetLat: targetPoint.lat + targetLatOffset,
         targetLng: targetPoint.lng + targetLngOffset,
-        noisePhaseX,
-        noisePhaseY,
-        noiseAmp,
+        speedFactor,
+        meanderPhase,
+        meanderAmp,
       };
     });
   }, [originPoints]);
@@ -243,7 +209,7 @@ function OpenDriftBacktrackAnimation({
 
     let animFrame: number;
     let startTime: number | null = null;
-    const duration = 4000; // 4.0 second progressive OpenDrift simulation
+    const duration = 4000; // 4.0 second smooth simulation
 
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
@@ -266,7 +232,7 @@ function OpenDriftBacktrackAnimation({
     };
   }, [isAnimating, slickCenter, originPoints, onProgress, onComplete]);
 
-  // Canvas layer for rendering the 60 Lagrangian particles + trajectory tails
+  // Canvas layer for rendering the natural particle drift and fluid trailing wakes
   useEffect(() => {
     if (!slickCenter || !particles.length) return;
 
@@ -296,30 +262,33 @@ function OpenDriftBacktrackAnimation({
 
       if (animProgress <= 0) return;
 
-      // Color mapping by time elapsed (OpenDrift linecolor gradient)
+      // Color interpolation: Cyan (T=0) -> Amber (T=-4h) -> Crimson Red (T=-8.8h)
       const tailColor = animProgress < 0.45
-        ? "#00F0FF"
-        : animProgress < 0.8
+        ? "#00E5FF"
+        : animProgress < 0.78
         ? "#FFB800"
         : "#EF3E42";
 
-      // Draw each particle and its backwards trajectory tail
+      // Draw each particle with organic hydrodynamic motion
       particles.forEach((p) => {
         const startLat = slickCenter[0] + p.seedLatOffset;
         const startLng = slickCenter[1] + p.seedLngOffset;
 
-        // Turbulent diffusion expands proportionally with sqrt(time)
-        const diffusion = Math.sqrt(animProgress) * p.noiseAmp;
-        const currentLat = startLat + (p.targetLat - startLat) * animProgress + Math.sin(animProgress * 7 + p.noisePhaseY) * diffusion;
-        const currentLng = startLng + (p.targetLng - startLng) * animProgress + Math.cos(animProgress * 7 + p.noisePhaseX) * diffusion;
+        // Effective progress with individual velocity shear
+        const effProgress = Math.min(1, animProgress * p.speedFactor);
+
+        // Natural sinusoidal ocean meander + turbulent Brownian dispersion
+        const meander = Math.sin(effProgress * Math.PI) * p.meanderAmp * Math.sin(effProgress * 5 + p.meanderPhase);
+        const currentLat = startLat + (p.targetLat - startLat) * effProgress - meander * 0.8;
+        const currentLng = startLng + (p.targetLng - startLng) * effProgress + meander * 1.2;
 
         const pStart = map.latLngToContainerPoint([startLat, startLng]);
         const pCurrent = map.latLngToContainerPoint([currentLat, currentLng]);
 
-        // Draw individual Lagrangian particle trajectory tail
+        // Faint, organic wake trail
         ctx.save();
         ctx.strokeStyle = tailColor;
-        ctx.globalAlpha = 0.28;
+        ctx.globalAlpha = 0.22;
         ctx.lineWidth = 1.2;
         ctx.beginPath();
         ctx.moveTo(pStart.x, pStart.y);
@@ -327,14 +296,14 @@ function OpenDriftBacktrackAnimation({
         ctx.stroke();
         ctx.restore();
 
-        // Draw active Lagrangian particle droplet
+        // Droplet marker with subtle luminous core
         ctx.save();
         ctx.fillStyle = tailColor;
         ctx.shadowColor = tailColor;
-        ctx.shadowBlur = 5;
-        ctx.globalAlpha = 0.9;
+        ctx.shadowBlur = 4;
+        ctx.globalAlpha = 0.85;
         ctx.beginPath();
-        ctx.arc(pCurrent.x, pCurrent.y, 2.5, 0, Math.PI * 2);
+        ctx.arc(pCurrent.x, pCurrent.y, 2.2, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
       });
@@ -352,30 +321,28 @@ function OpenDriftBacktrackAnimation({
   if (!isAnimating && animProgress === 0) return null;
   if (!slickCenter || !originPoints || !originPoints.length) return null;
 
-  // Primary origin point (highest intensity)
+  // Primary origin point
   const primaryOrigin = originPoints.reduce(
     (max, pt) => (pt.intensity > max.intensity ? pt : max),
     originPoints[0]
   );
 
-  // 4 Concrete Forensic Backtrack Steps along the drift corridor
+  // 4 Tactical Backtrack Milestones along the corridor
   const steps = [
     {
       lat: slickCenter[0],
       lng: slickCenter[1],
       threshold: 0.0,
       time: "T - 0.0h",
-      title: "Step 0: Slick Detection",
-      subtitle: "SAR Observation Centroid",
-      color: "#00D4E0",
+      title: "Slick Detection (SAR)",
+      color: "#00E5FF",
     },
     {
       lat: slickCenter[0] + (primaryOrigin.lat - slickCenter[0]) * 0.33,
       lng: slickCenter[1] + (primaryOrigin.lng - slickCenter[1]) * 0.33,
       threshold: 0.33,
       time: "T - 2.8h",
-      title: "Step 1: Surface Leeway Drift",
-      subtitle: "ERA5 Wind Drift Component",
+      title: "Surface Leeway Drift",
       color: "#FFB800",
     },
     {
@@ -383,8 +350,7 @@ function OpenDriftBacktrackAnimation({
       lng: slickCenter[1] + (primaryOrigin.lng - slickCenter[1]) * 0.68,
       threshold: 0.68,
       time: "T - 5.8h",
-      title: "Step 2: HYCOM Ocean Current",
-      subtitle: "1/12° Reverse Advection",
+      title: "HYCOM 1/12° Advection",
       color: "#FF7700",
     },
     {
@@ -392,94 +358,72 @@ function OpenDriftBacktrackAnimation({
       lng: primaryOrigin.lng,
       threshold: 0.98,
       time: "T - 8.8h",
-      title: "Step 3: Discharge Origin Core",
-      subtitle: "98% Probability Envelope",
+      title: "Origin Envelope Core",
       color: "#EF3E42",
     },
   ];
 
-  // Current lead tracer position
   const currentLat = slickCenter[0] + (primaryOrigin.lat - slickCenter[0]) * animProgress;
   const currentLng = slickCenter[1] + (primaryOrigin.lng - slickCenter[1]) * animProgress;
-
-  // Reached milestone waypoints
   const reachedSteps = steps.filter((s) => animProgress >= s.threshold);
 
   return (
     <>
-      {/* 1. Traced Backtrack Path (Solid neon beam with glowing underlay) */}
+      {/* 1. Subtle, natural central streamline */}
       <Polyline
         positions={[slickCenter, [currentLat, currentLng]]}
         pathOptions={{
-          color: "rgba(0, 212, 224, 0.35)",
-          weight: 7,
-          opacity: 1,
+          color: "rgba(0, 229, 255, 0.22)",
+          weight: 5,
+          opacity: 0.8,
           lineCap: "round",
         }}
       />
       <Polyline
         positions={[slickCenter, [currentLat, currentLng]]}
         pathOptions={{
-          color: "#00F0FF",
-          weight: 2.5,
-          opacity: 0.95,
+          color: "#00E5FF",
+          weight: 1.5,
+          opacity: 0.85,
+          dashArray: "4, 4",
           lineCap: "round",
         }}
       />
 
-      {/* 2. Step Waypoints (Traced out progressively with timestamp chips) */}
+      {/* 2. Sleek, unobtrusive milestone nodes (Hover only — no screen-blocking permanent boxes) */}
       {reachedSteps.map((s, idx) => (
-        <React.Fragment key={`backtrack-step-${idx}`}>
-          {/* Waypoint sonar ripple on lock */}
-          <CircleMarker
-            center={[s.lat, s.lng]}
-            radius={idx === 3 ? 16 : 12}
-            pathOptions={{
-              fillColor: s.color,
-              fillOpacity: 0.2,
-              color: s.color,
-              weight: 1.5,
-              opacity: 0.8,
-            }}
-          />
-
-          {/* Solid Waypoint Dot */}
-          <CircleMarker
-            center={[s.lat, s.lng]}
-            radius={idx === 3 ? 7 : 5}
-            pathOptions={{
-              fillColor: s.color,
-              fillOpacity: 1,
-              color: "#FFFFFF",
-              weight: 2,
-            }}
+        <CircleMarker
+          key={`backtrack-step-${idx}`}
+          center={[s.lat, s.lng]}
+          radius={idx === 3 ? 6 : 4.5}
+          pathOptions={{
+            fillColor: s.color,
+            fillOpacity: 1,
+            color: "#FFFFFF",
+            weight: 2,
+          }}
+        >
+          <Tooltip
+            direction="top"
+            offset={[0, -8]}
+            className="vessel-custom-tooltip"
           >
-            <Tooltip
-              direction="right"
-              offset={[10, 0]}
-              permanent={true}
-              className="vessel-custom-tooltip"
-            >
-              <div className="bg-[#041527]/95 border border-[rgba(0,212,224,0.4)] rounded-lg px-2 py-1 shadow-lg text-white backdrop-blur-md select-none pointer-events-none whitespace-nowrap">
-                <div className="text-[9px] font-bold tracking-wider" style={{ color: s.color }}>
-                  {s.time} · {s.title}
-                </div>
-                <div className="text-[8px] text-[#A3C0DC]">{s.subtitle}</div>
-              </div>
-            </Tooltip>
-          </CircleMarker>
-        </React.Fragment>
+            <div className="bg-[#041527]/95 border border-[rgba(0,212,224,0.4)] rounded-lg px-2.5 py-1 shadow-lg text-white backdrop-blur-md select-none pointer-events-none whitespace-nowrap text-[9px] font-bold">
+              <span style={{ color: s.color }}>{s.time}</span> · {s.title}
+            </div>
+          </Tooltip>
+        </CircleMarker>
       ))}
 
-      {/* 3. Leading Active Wavefront Head (Pulsing Tracer Radar) */}
+      {/* 3. Leading wave tracer beacon */}
       <CircleMarker
         center={[currentLat, currentLng]}
-        radius={10}
+        radius={7}
         pathOptions={{
           fillColor: "#FFB800",
-          fillOpacity: 0.9,
+          fillOpacity: 1,
           color: "#FFFFFF",
-          weight: 2.5,
+          weight: 2,
         }}
       />
     </>
@@ -488,16 +432,19 @@ function OpenDriftBacktrackAnimation({
 
 /**
  * Tactical Point Marker for Candidate Vessels.
- * Clean, sleek radar tracking points (no generic icons).
- * Features an inner solid target point, outer radar ping pulse, and percentage pill.
+ * Bold, high-contrast radar tracking target points.
+ * Features an 18px solid core point, crisp 3px white border, inner bullseye pip,
+ * glowing ping wave, and bold dark-mode score pill with Archivo Black font.
  */
 function createVesselPointIcon(
   isDark: boolean,
   isSelected: boolean,
   confidence: number = 0.5
 ) {
-  const color = isDark ? "#EF3E42" : "#00D4E0";
-  const size = isSelected ? 30 : 22;
+  const color = isDark ? "#EF3E42" : "#005A9C";
+  const accentColor = isDark ? "#FF5252" : "#00D4E0";
+  const size = isSelected ? 42 : 34;
+  const dotSize = isSelected ? 20 : 16;
   const scorePercent = Math.round(confidence * 100);
 
   const html = `
@@ -510,16 +457,16 @@ function createVesselPointIcon(
       justify-content: center;
       cursor: pointer;
     ">
-      <!-- Outer radar ping pulse -->
+      <!-- Outer radar ping wave -->
       <div style="
         position: absolute;
         width: 100%;
         height: 100%;
         border-radius: 50%;
-        background: ${isDark ? "rgba(239, 62, 66, 0.3)" : "rgba(0, 212, 224, 0.3)"};
-        border: 1.5px solid ${color};
-        animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-        opacity: 0.8;
+        background: ${isDark ? "rgba(239, 62, 66, 0.22)" : "rgba(0, 90, 156, 0.22)"};
+        border: 2px solid ${color};
+        animation: ping 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+        opacity: 0.85;
       "></div>
       
       <!-- Selection ring -->
@@ -527,46 +474,58 @@ function createVesselPointIcon(
         isSelected
           ? `<div style="
               position: absolute;
-              inset: -5px;
-              border: 2px dashed ${color};
+              inset: -6px;
+              border: 2.5px dashed ${accentColor};
               border-radius: 50%;
-              animation: spin 6s linear infinite;
+              animation: spin 5s linear infinite;
             "></div>`
           : ""
       }
 
-      <!-- Solid core radar tracking point -->
+      <!-- Bold solid core radar target point with double border and inner pip -->
       <div style="
-        width: ${isSelected ? 14 : 10}px;
-        height: ${isSelected ? 14 : 10}px;
+        width: ${dotSize}px;
+        height: ${dotSize}px;
         border-radius: 50%;
         background: ${color};
-        border: 2px solid #FFFFFF;
-        box-shadow: 0 0 10px ${color}, 0 2px 6px rgba(0,0,0,0.6);
+        border: 3px solid #FFFFFF;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.85), 0 0 12px ${color};
+        display: flex;
+        align-items: center;
+        justify-content: center;
         z-index: 2;
         transition: transform 0.2s ease;
-      "></div>
+      ">
+        <!-- Inner white bullseye pip -->
+        <div style="
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: #FFFFFF;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        "></div>
+      </div>
 
-      <!-- Tactical probability badge -->
+      <!-- Bold tactical probability badge -->
       <div style="
         position: absolute;
-        top: -19px;
+        top: -21px;
         left: 50%;
         transform: translateX(-50%);
-        background: rgba(4, 21, 39, 0.92);
+        background: rgba(4, 21, 39, 0.96);
         color: #FFFFFF;
-        border: 1px solid ${color};
-        padding: 1px 5px;
-        border-radius: 4px;
-        font-size: 8.5px;
-        font-weight: 700;
+        border: 1.5px solid ${color};
+        padding: 2px 7px;
+        border-radius: 9999px;
+        font-size: 9.5px;
+        font-weight: 800;
         white-space: nowrap;
         font-family: 'Archivo Black', sans-serif;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.6);
         pointer-events: none;
-        letter-spacing: 0.02em;
+        letter-spacing: 0.03em;
       ">
-        ${scorePercent}%
+        ${scorePercent}% ${isDark ? "DARK" : "AIS"}
       </div>
     </div>
   `;
