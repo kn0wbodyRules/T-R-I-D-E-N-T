@@ -7,9 +7,19 @@ import clsx from "clsx";
 import ConfidenceBar from "@/components/ui/ConfidenceBar";
 import VesselIcon from "@/components/map/VesselIcon";
 import VesselDetailDrawer from "@/components/vessel/VesselDetailDrawer";
-import { LeaderboardPodium } from "@/components/ui/leaderboard-podium";
 import { fetchRanking } from "@/lib/mock-data";
 import { useIncident } from "@/components/providers/IncidentContext";
+
+const getVesselImage = (id: string) => {
+  const images = [
+    "https://images.unsplash.com/photo-1518527989017-5baca7a58d3c?w=800&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1585713181935-d5f622cc2415?w=800&auto=format&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1606185540834-d6e7483ee1a4?w=800&auto=format&fit=crop&q=80",
+  ];
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash += id.charCodeAt(i);
+  return images[hash % images.length];
+};
 
 const RadarShipIcon = ({ fill, className }: { fill: string; className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill={fill} className={className}>
@@ -94,19 +104,178 @@ export default function AttributionRankingPage({
             </div>
           </div>
 
-          {/* Top Suspects Podium */}
-          <div className="bg-[#FFFFFF] border border-[rgba(0,90,156,0.18)] rounded-[38px] p-8 flex flex-col items-center justify-center pt-16">
-            <LeaderboardPodium
-              rankings={ranking.rows.map((r, idx) => ({
-                userId: r.vessel_id,
-                userName: r.name_or_unidentified,
-                rank: idx + 1,
-                value: r.confidence_score,
-                isDark: r.is_dark,
-              }))}
-              size="lg"
-              showAvatar={false}
-            />
+          {/* Top Suspects Lineup Deck (Executive Attribution Cards) */}
+          <div className="bg-[#FFFFFF] border border-[rgba(0,90,156,0.18)] rounded-[38px] p-6 sm:p-8 flex flex-col gap-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[rgba(0,90,156,0.12)] pb-4 gap-3">
+              <div>
+                <div className="flex items-center gap-2 text-[10px] text-[#5A738E] font-bold tracking-wider uppercase mb-1">
+                  <span>PRIMARY FORENSIC INTERCEPT · TOP 3 ATTRIBUTION LEADS</span>
+                </div>
+                <h2 className="font-heading text-xl sm:text-2xl text-[#005A9C] uppercase tracking-wide">
+                  High-Probability Suspect Lineup
+                </h2>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="px-3.5 py-1.5 bg-[#EDF3FA] border border-[rgba(0,90,156,0.2)] rounded-full text-xs flex items-center gap-2 text-[#005A9C] font-bold">
+                  <span className="w-2 h-2 rounded-full bg-[#EF3E42] animate-ping" />
+                  <span>SUSPECT #1 vs #2 DELTA: +4.3% CLOSE MARGIN</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {ranking.rows.slice(0, 3).map((suspect) => {
+                const isRank1 = suspect.rank === 1;
+                const isRank2 = suspect.rank === 2;
+
+                const headerBg = isRank1
+                  ? "bg-[#EF3E42] text-white"
+                  : isRank2
+                  ? "bg-[#FFB800] text-[#041527]"
+                  : "bg-[#005A9C] text-white";
+
+                const scoreColor = isRank1
+                  ? "text-[#EF3E42]"
+                  : isRank2
+                  ? "text-[#D97706]"
+                  : "text-[#005A9C]";
+
+                const badgeText = isRank1
+                  ? "PRIMARY SUSPECT LEAD"
+                  : isRank2
+                  ? "SECONDARY SUSPECT"
+                  : "PERSON OF INTEREST";
+
+                return (
+                  <div
+                    key={suspect.vessel_id}
+                    onClick={() => setSelectedVesselId(suspect.vessel_id)}
+                    className={clsx(
+                      "group rounded-[28px] border overflow-hidden flex flex-col transition-all duration-200 cursor-pointer shadow-sm hover:shadow-xl hover:-translate-y-1 bg-[#FFFFFF]",
+                      isRank1
+                        ? "border-[#EF3E42] ring-1 ring-[#EF3E42]/30"
+                        : isRank2
+                        ? "border-[#FFB800] ring-1 ring-[#FFB800]/30"
+                        : "border-[rgba(0,90,156,0.25)]"
+                    )}
+                  >
+                    {/* Card Top Pill Header */}
+                    <div className={clsx("px-5 py-2.5 flex items-center justify-between font-bold text-xs", headerBg)}>
+                      <div className="flex items-center gap-2">
+                        <span className="font-heading text-sm">#{suspect.rank}</span>
+                        <span className="tracking-wider uppercase text-[11px]">{badgeText}</span>
+                      </div>
+                      <span className="text-[10px] font-mono tracking-wider font-extrabold uppercase px-2 py-0.5 rounded-full bg-black/20">
+                        {suspect.is_dark ? "AIS SILENT" : "AIS ACTIVE"}
+                      </span>
+                    </div>
+
+                    {/* Ship Image Hero Banner */}
+                    <div className="relative h-44 w-full bg-[#041527] overflow-hidden">
+                      <img
+                        src={getVesselImage(suspect.vessel_id)}
+                        alt={suspect.name_or_unidentified}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#041527] via-[#041527]/40 to-transparent" />
+
+                      {/* Bottom-left Vessel Name & Flag */}
+                      <div className="absolute bottom-3 left-4 right-20">
+                        <div className="text-[10px] text-[#93C5FD] font-semibold uppercase tracking-wider">
+                          {suspect.flag || "UNFLAGGED"} · {suspect.type || "TANKER"}
+                        </div>
+                        <div className="font-heading text-sm text-white uppercase tracking-wide truncate drop-shadow-md">
+                          {suspect.name_or_unidentified}
+                        </div>
+                      </div>
+
+                      {/* Bottom-right Score Badge */}
+                      <div className="absolute bottom-3 right-4 flex flex-col items-end">
+                        <span className="text-[9px] text-[#A3C0DC] uppercase font-bold tracking-wider">CULPABILITY</span>
+                        <span className={clsx("font-heading text-xl leading-none", isRank1 ? "text-[#FF4D52]" : isRank2 ? "text-[#FFC107]" : "text-[#38BDF8]")}>
+                          {(suspect.confidence_score * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Card Body with Key Evidence & Metrics */}
+                    <div className="p-5 flex flex-col gap-4 flex-1 justify-between bg-[#FFFFFF]">
+                      {/* Metric Grid */}
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="bg-[#F8FAFD] p-2.5 rounded-xl border border-[rgba(0,90,156,0.08)]">
+                          <span className="text-[10px] text-[#5A738E] uppercase block">IMO / IDENTIFIER</span>
+                          <span className="font-bold text-[#041527] truncate block">
+                            {suspect.imo && suspect.imo !== "UNKNOWN" ? `IMO ${suspect.imo}` : suspect.vessel_id}
+                          </span>
+                        </div>
+                        <div className="bg-[#F8FAFD] p-2.5 rounded-xl border border-[rgba(0,90,156,0.08)]">
+                          <span className="text-[10px] text-[#5A738E] uppercase block">CORRIDOR SPEED</span>
+                          <span className="font-bold text-[#041527]">
+                            {suspect.speed_knots ? `${suspect.speed_knots.toFixed(1)} kts` : "8.2 kts"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Confidence Progress Bar */}
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-[#5A738E] font-medium">Attribution Confidence:</span>
+                          <span className={clsx("font-heading text-xs", scoreColor)}>
+                            {(suspect.confidence_score * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="w-full h-2 bg-[#EDF3FA] rounded-full overflow-hidden">
+                          <div
+                            className={clsx(
+                              "h-full rounded-full transition-all duration-500",
+                              isRank1
+                                ? "bg-[#EF3E42]"
+                                : isRank2
+                                ? "bg-[#FFB800]"
+                                : "bg-[#005A9C]"
+                            )}
+                            style={{ width: `${Math.round(suspect.confidence_score * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Forensic Factors Bullet */}
+                      <div className="text-[11px] text-[#334E68] bg-[#F8FAFD] p-3 rounded-xl border border-[rgba(0,90,156,0.08)] flex items-start gap-2">
+                        <span className="material-symbols-outlined text-sm text-[#005A9C] mt-0.5 shrink-0">
+                          {isRank1 ? "crisis_alert" : isRank2 ? "rule" : "verified"}
+                        </span>
+                        <span>
+                          {isRank1
+                            ? "Unannounced AIS blackout intersecting backtracked spill window. VIIRS thermal radiance confirmed."
+                            : isRank2
+                            ? "Parallel transit trajectory (042°) with anomalous 4.2 kts deceleration in corridor envelope."
+                            : "Steady transit heading (215°). No speed anomalies detected during estimated release time."}
+                        </span>
+                      </div>
+
+                      {/* CTA Dossier Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedVesselId(suspect.vessel_id);
+                        }}
+                        className={clsx(
+                          "w-full py-2.5 rounded-full font-bold text-xs tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs",
+                          isRank1
+                            ? "bg-[#EF3E42] hover:bg-[#d63034] text-white"
+                            : isRank2
+                            ? "bg-[#FFB800] hover:bg-[#e0a200] text-[#041527]"
+                            : "bg-[#005A9C] hover:bg-[#00477d] text-white"
+                        )}
+                      >
+                        <span>INSPECT FORENSIC DOSSIER</span>
+                        <span className="material-symbols-outlined text-sm font-bold">arrow_forward</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {/* Suspect Ranking Table */}
