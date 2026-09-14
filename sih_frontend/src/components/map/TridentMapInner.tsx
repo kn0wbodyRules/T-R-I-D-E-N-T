@@ -52,8 +52,7 @@ const getVesselImage = (id: string) => {
 
 /**
  * Authentic Maritime Coordinate Graticule (Parallels & Meridians).
- * Prevents the "empty dark canvas / AI void" look by rendering exact latitude & longitude
- * grid lines with nautical DMS coordinates (e.g., 18°50'00" N, 071°50'00" E) calibrated to zoom level.
+ * Directly attached to map container to prevent pane transform drift.
  */
 function NauticalGraticule({ show }: { show: boolean }) {
   const map = useMap();
@@ -61,24 +60,28 @@ function NauticalGraticule({ show }: { show: boolean }) {
   useEffect(() => {
     if (!show) return;
 
-    const pane = map.getPane("overlayPane");
-    if (!pane) return;
+    const container = map.getContainer();
+    if (!container) return;
 
-    const canvas = L.DomUtil.create("canvas", "leaflet-nautical-graticule-canvas");
+    const canvas = document.createElement("canvas");
+    canvas.className = "leaflet-nautical-graticule-canvas";
     canvas.style.position = "absolute";
+    canvas.style.top = "0px";
+    canvas.style.left = "0px";
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
     canvas.style.pointerEvents = "none";
-    canvas.style.zIndex = "240";
-    pane.appendChild(canvas);
+    canvas.style.zIndex = "405";
+    container.appendChild(canvas);
 
     const draw = () => {
       const size = map.getSize();
       if (size.x === 0 || size.y === 0) return;
 
-      canvas.width = size.x;
-      canvas.height = size.y;
-
-      const topLeft = map.containerPointToLayerPoint([0, 0]);
-      L.DomUtil.setPosition(canvas, topLeft);
+      if (canvas.width !== size.x || canvas.height !== size.y) {
+        canvas.width = size.x;
+        canvas.height = size.y;
+      }
 
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
@@ -115,35 +118,33 @@ function NauticalGraticule({ show }: { show: boolean }) {
       // Draw latitude parallels
       for (let lat = minLat; lat <= maxLat; lat += step) {
         if (lat < south || lat > north) continue;
-        const p1 = map.latLngToContainerPoint([lat, west]);
-        const p2 = map.latLngToContainerPoint([lat, east]);
+        const pt = map.latLngToContainerPoint([lat, west]);
 
         ctx.beginPath();
-        ctx.moveTo(0, p1.y);
-        ctx.lineTo(size.x, p2.y);
+        ctx.moveTo(0, pt.y);
+        ctx.lineTo(size.x, pt.y);
         ctx.stroke();
 
         const deg = Math.floor(lat);
         const min = Math.round((lat - deg) * 60);
         const label = `${deg}°${min.toString().padStart(2, "0")}'N`;
-        ctx.fillText(label, 12, p1.y - 3);
+        ctx.fillText(label, 12, pt.y - 3);
       }
 
       // Draw longitude meridians
       for (let lng = minLng; lng <= maxLng; lng += step) {
         if (lng < west || lng > east) continue;
-        const p1 = map.latLngToContainerPoint([north, lng]);
-        const p2 = map.latLngToContainerPoint([south, lng]);
+        const pt = map.latLngToContainerPoint([north, lng]);
 
         ctx.beginPath();
-        ctx.moveTo(p1.x, 0);
-        ctx.lineTo(p2.x, size.y);
+        ctx.moveTo(pt.x, 0);
+        ctx.lineTo(pt.x, size.y);
         ctx.stroke();
 
         const deg = Math.floor(lng);
         const min = Math.round((lng - deg) * 60);
         const label = `${deg}°${min.toString().padStart(2, "0")}'E`;
-        ctx.fillText(label, p1.x + 4, size.y - 12);
+        ctx.fillText(label, pt.x + 4, size.y - 12);
       }
 
       ctx.restore();
@@ -152,11 +153,14 @@ function NauticalGraticule({ show }: { show: boolean }) {
     draw();
     const rafId = requestAnimationFrame(draw);
     const timer1 = setTimeout(draw, 60);
+    const timer2 = setTimeout(draw, 250);
+
     map.on("move zoom viewreset resize layeradd", draw);
 
     return () => {
       cancelAnimationFrame(rafId);
       clearTimeout(timer1);
+      clearTimeout(timer2);
       map.off("move zoom viewreset resize layeradd", draw);
       canvas.remove();
     };
@@ -166,10 +170,10 @@ function NauticalGraticule({ show }: { show: boolean }) {
 }
 
 /**
- * Calibrated, Highly-Visible Oceanographic KDE Probability Envelope.
- * Renders a rich, luminous, multi-pass Gaussian KDE thermal dispersion plume
- * (Crimson Core -> Coral Flame -> Radiant Amber -> Golden Dispersion)
- * that is clearly visible and continuous across satellite, ocean, and dark charts.
+ * Prominent, Highly-Visible Oceanographic KDE Probability Heatmap.
+ * Renders a rich, multi-pass thermal dispersion plume
+ * (Ruby Red Core -> Coral Flame -> Radiant Amber -> Golden Halo)
+ * Attached directly to map container for 100% reliable rendering without transform drift.
  */
 function CanvasKDEHeatmap({
   points,
@@ -183,25 +187,29 @@ function CanvasKDEHeatmap({
   useEffect(() => {
     if (!points || !points.length) return;
 
-    const pane = map.getPane("overlayPane");
-    if (!pane) return;
+    const container = map.getContainer();
+    if (!container) return;
 
-    const canvas = L.DomUtil.create("canvas", "leaflet-canvas-kde-heatmap");
+    const canvas = document.createElement("canvas");
+    canvas.className = "leaflet-canvas-kde-heatmap";
     canvas.style.position = "absolute";
+    canvas.style.top = "0px";
+    canvas.style.left = "0px";
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
     canvas.style.pointerEvents = "none";
-    canvas.style.zIndex = "320";
-    canvas.style.opacity = dimmed ? "0.40" : "0.92";
-    pane.appendChild(canvas);
+    canvas.style.zIndex = "410";
+    canvas.style.opacity = dimmed ? "0.45" : "0.96";
+    container.appendChild(canvas);
 
     const draw = () => {
       const size = map.getSize();
       if (size.x === 0 || size.y === 0) return;
 
-      canvas.width = size.x;
-      canvas.height = size.y;
-
-      const topLeft = map.containerPointToLayerPoint([0, 0]);
-      L.DomUtil.setPosition(canvas, topLeft);
+      if (canvas.width !== size.x || canvas.height !== size.y) {
+        canvas.width = size.x;
+        canvas.height = size.y;
+      }
 
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
@@ -209,13 +217,13 @@ function CanvasKDEHeatmap({
       ctx.clearRect(0, 0, size.x, size.y);
 
       const zoom = map.getZoom();
-      // Prominent, generous spatial presence that cleanly fuses origin points into a corridor
-      const baseRadius = Math.max(65, 115 * Math.pow(1.22, zoom - 10));
+      // Prominent, generous radius merging points into a rich, continuous corridor
+      const baseRadius = Math.max(75, 135 * Math.pow(1.22, zoom - 10));
       const opacityScale = dimmed ? 0.45 : 1.0;
 
       const sortedPoints = [...points].sort((a, b) => a.intensity - b.intensity);
 
-      // PASS 1: Broad, luminous thermal dispersion field (Atmospheric & Hydrodynamic Presence)
+      // PASS 1: Broad, luminous thermal dispersion field
       sortedPoints.forEach((pt) => {
         const point = map.latLngToContainerPoint([pt.lat, pt.lng]);
         const x = point.x;
@@ -225,12 +233,12 @@ function CanvasKDEHeatmap({
         const grad = ctx.createRadialGradient(x, y, 0, x, y, rad);
         const a = pt.intensity * opacityScale;
 
-        // Radiant, pure thermal spectrum — NO blue/cyan to eliminate rainbow artifacts
-        grad.addColorStop(0.00, `rgba(239, 68, 68, ${a * 0.95})`);   // Radiant Crimson
-        grad.addColorStop(0.24, `rgba(249, 115, 22, ${a * 0.88})`);  // Vivid Coral Flame
-        grad.addColorStop(0.52, `rgba(245, 158, 11, ${a * 0.72})`);  // Luminous Warm Amber
-        grad.addColorStop(0.78, `rgba(251, 191, 36, ${a * 0.38})`);  // Golden Halo
-        grad.addColorStop(1.00, `rgba(251, 191, 36, 0)`);            // Smooth transparent fade
+        // Radiant thermal spectrum (No blue/cyan, pure thermal)
+        grad.addColorStop(0.00, `rgba(239, 68, 68, ${a * 0.98})`);   // Deep Ruby Red
+        grad.addColorStop(0.22, `rgba(255, 87, 34, ${a * 0.90})`);   // Vivid Coral
+        grad.addColorStop(0.48, `rgba(255, 184, 0, ${a * 0.78})`);   // Radiant Warm Amber
+        grad.addColorStop(0.72, `rgba(251, 191, 36, ${a * 0.42})`);  // Golden Halo
+        grad.addColorStop(1.00, `rgba(251, 191, 36, 0)`);            // Transparent fade
 
         ctx.fillStyle = grad;
         ctx.beginPath();
@@ -244,14 +252,14 @@ function CanvasKDEHeatmap({
         const point = map.latLngToContainerPoint([pt.lat, pt.lng]);
         const x = point.x;
         const y = point.y;
-        const coreRad = baseRadius * (0.42 + pt.intensity * 0.32);
+        const coreRad = baseRadius * (0.44 + pt.intensity * 0.32);
 
         const coreGrad = ctx.createRadialGradient(x, y, 0, x, y, coreRad);
         const a = pt.intensity * opacityScale;
 
-        coreGrad.addColorStop(0.00, `rgba(255, 20, 60, ${a * 0.98})`);  // Deep Intense Core
-        coreGrad.addColorStop(0.40, `rgba(255, 90, 20, ${a * 0.86})`);  // Bright Flame Orange
-        coreGrad.addColorStop(0.75, `rgba(255, 190, 0, ${a * 0.45})`);  // Vivid Gold
+        coreGrad.addColorStop(0.00, `rgba(255, 20, 60, ${a * 0.98})`);  // Deep Intense Ruby
+        coreGrad.addColorStop(0.40, `rgba(255, 90, 20, ${a * 0.88})`);  // Flame Orange
+        coreGrad.addColorStop(0.75, `rgba(255, 190, 0, ${a * 0.50})`);  // Vivid Gold
         coreGrad.addColorStop(1.00, `rgba(255, 190, 0, 0)`);
 
         ctx.fillStyle = coreGrad;
@@ -265,30 +273,40 @@ function CanvasKDEHeatmap({
         const hottest = sortedPoints[sortedPoints.length - 1];
         const hPoint = map.latLngToContainerPoint([hottest.lat, hottest.lng]);
 
-        // 90% Probability Core Isobar (Crimson dashed circle)
+        // 90% Probability Core Isobar (White dashed circle)
         ctx.save();
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
-        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.90)";
+        ctx.lineWidth = 1.4;
         ctx.setLineDash([4, 4]);
         ctx.beginPath();
-        ctx.arc(hPoint.x, hPoint.y, baseRadius * 0.45, 0, Math.PI * 2);
+        ctx.arc(hPoint.x, hPoint.y, baseRadius * 0.46, 0, Math.PI * 2);
         ctx.stroke();
 
         // 75% Probability Corridor Isobar (Amber dashed circle)
-        ctx.strokeStyle = "rgba(245, 158, 11, 0.65)";
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(255, 184, 0, 0.75)";
+        ctx.lineWidth = 1.1;
         ctx.setLineDash([5, 5]);
         ctx.beginPath();
-        ctx.arc(hPoint.x, hPoint.y, baseRadius * 0.85, 0, Math.PI * 2);
+        ctx.arc(hPoint.x, hPoint.y, baseRadius * 0.86, 0, Math.PI * 2);
         ctx.stroke();
+
+        // Tactical Target Pip at centroid
+        ctx.setLineDash([]);
+        ctx.strokeStyle = "#FFFFFF";
+        ctx.lineWidth = 2;
+        ctx.fillStyle = "#EF4444";
+        ctx.beginPath();
+        ctx.arc(hPoint.x, hPoint.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
         ctx.restore();
       }
     };
 
     draw();
-    // Schedule asynchronous redraws to ensure rendering even if container size initializes late
     const rafId = requestAnimationFrame(draw);
-    const timer1 = setTimeout(draw, 60);
+    const timer1 = setTimeout(draw, 50);
     const timer2 = setTimeout(draw, 250);
 
     map.on("move zoom viewreset resize layeradd", draw);
@@ -307,12 +325,8 @@ function CanvasKDEHeatmap({
 
 /**
  * Authentic OpenDrift Lagrangian Particle Ensemble Backtrack Simulation Engine.
- * Features:
- * - 120 discrete Lagrangian super-particles with individual velocity shear (84% to 116%)
- *   and Brownian lateral dispersion (Kxy = 10 m²/s) along the reverse HYCOM 1/12° forcing vector.
- * - Decoupled useRef animation clock running at a continuous 60fps without React re-render cancellation.
- * - Organic fluid wakes and transition from SAR Detection (T=0) -> Leeway -> HYCOM -> Origin Core (T=-8.8h).
- * - Calibrated milestone isochrones.
+ * 150 discrete fluid droplets drifting backwards with trailing wakes (comet tails),
+ * velocity shear, Brownian lateral dispersion, and sequential milestone lighting.
  */
 function OpenDriftBacktrackAnimation({
   slickCenter,
@@ -330,36 +344,35 @@ function OpenDriftBacktrackAnimation({
   const map = useMap();
   const [displayedProgress, setDisplayedProgress] = useState(0);
 
-  // Refs to isolate high-frequency 60fps clock from React dependency restarts
   const animProgressRef = useRef(0);
   const startTimeRef = useRef<number | null>(null);
   const rafIdRef = useRef<number | null>(null);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
 
-  // 120 deterministic Lagrangian super-particles with realistic ocean fluid dynamics
+  // 150 deterministic Lagrangian super-particles with realistic ocean fluid dynamics
   const particles = useMemo(() => {
     if (!originPoints || !originPoints.length) return [];
-    return Array.from({ length: 120 }, (_, i) => {
+    return Array.from({ length: 150 }, (_, i) => {
       // Clustered seeding inside the SAR slick at T=0
-      const angle = (i / 120) * Math.PI * 2;
-      const dist = ((i * 23) % 47) / 47 * 0.0032;
+      const angle = (i / 150) * Math.PI * 2;
+      const dist = ((i * 29) % 53) / 53 * 0.0035;
       const seedLatOffset = Math.sin(angle) * dist;
       const seedLngOffset = Math.cos(angle) * dist;
 
       // Target mapping distributed across origin KDE cluster
       const targetPoint = originPoints[i % originPoints.length];
-      const targetAngle = (i * 31) % 360;
-      const targetDist = ((i * 19) % 37) / 37 * 0.0068;
+      const targetAngle = (i * 37) % 360;
+      const targetDist = ((i * 23) % 43) / 43 * 0.0075;
       const targetLatOffset = Math.sin(targetAngle) * targetDist;
       const targetLngOffset = Math.cos(targetAngle) * targetDist;
 
-      // Hydrodynamic velocity shear: droplet transport speeds range from 84% to 116%
-      const speedFactor = 0.84 + ((i * 17) % 33) / 33 * 0.32;
+      // Hydrodynamic velocity shear: droplet transport speeds range from 82% to 118%
+      const speedFactor = 0.82 + ((i * 19) % 37) / 37 * 0.36;
 
-      // Turbulent Brownian eddy diffusion (Kxy = 10 m²/s)
-      const meanderPhase = (i * 2.17) % (Math.PI * 2);
-      const meanderAmp = 0.0028 + ((i % 9) / 9) * 0.0042;
+      // Turbulent Brownian lateral eddy diffusion (Kxy = 10 m²/s)
+      const meanderPhase = (i * 2.31) % (Math.PI * 2);
+      const meanderAmp = 0.003 + ((i % 11) / 11) * 0.0045;
 
       return {
         seedLatOffset,
@@ -382,20 +395,25 @@ function OpenDriftBacktrackAnimation({
     );
   }, [originPoints]);
 
-  // High-performance canvas particle renderer
+  // High-performance canvas particle renderer directly on map container
   useEffect(() => {
     if (!slickCenter || !particles.length) return;
 
-    const pane = map.getPane("overlayPane");
-    if (!pane) return;
+    const container = map.getContainer();
+    if (!container) return;
 
-    const canvas = L.DomUtil.create("canvas", "leaflet-opendrift-particles-canvas");
+    const canvas = document.createElement("canvas");
+    canvas.className = "leaflet-opendrift-particles-canvas";
     canvas.style.position = "absolute";
+    canvas.style.top = "0px";
+    canvas.style.left = "0px";
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
     canvas.style.pointerEvents = "none";
-    canvas.style.zIndex = "360";
-    pane.appendChild(canvas);
+    canvas.style.zIndex = "420";
+    container.appendChild(canvas);
 
-    const DURATION = 4200; // 4.2s smooth advection duration
+    const DURATION = 4600; // 4.6s smooth hydrodynamic advection sequence
 
     const render = (now: number) => {
       if (!startTimeRef.current) startTimeRef.current = now;
@@ -403,18 +421,17 @@ function OpenDriftBacktrackAnimation({
       const progress = Math.min(elapsed / DURATION, 1);
       animProgressRef.current = progress;
 
-      // Periodically update displayed progress for React milestone markers (throttled)
       setDisplayedProgress((prev) => {
-        if (Math.abs(prev - progress) > 0.02 || progress === 1) return progress;
+        if (Math.abs(prev - progress) > 0.015 || progress === 1) return progress;
         return prev;
       });
 
       const size = map.getSize();
       if (size.x > 0 && size.y > 0) {
-        canvas.width = size.x;
-        canvas.height = size.y;
-        const topLeft = map.containerPointToLayerPoint([0, 0]);
-        L.DomUtil.setPosition(canvas, topLeft);
+        if (canvas.width !== size.x || canvas.height !== size.y) {
+          canvas.width = size.x;
+          canvas.height = size.y;
+        }
 
         const ctx = canvas.getContext("2d");
         if (ctx) {
@@ -422,9 +439,9 @@ function OpenDriftBacktrackAnimation({
 
           // Authentic oceanographic time ramp: Cerulean (T=0) -> Amber (T=-4h) -> Crimson (T=-8.8h)
           const tailColor =
-            progress < 0.4
+            progress < 0.38
               ? "#38BDF8"
-              : progress < 0.75
+              : progress < 0.72
               ? "#F59E0B"
               : "#EF4444";
 
@@ -438,35 +455,46 @@ function OpenDriftBacktrackAnimation({
             const meander =
               Math.sin(effProgress * Math.PI) *
               p.meanderAmp *
-              Math.sin(effProgress * 6 + p.meanderPhase);
+              Math.sin(effProgress * 7 + p.meanderPhase);
 
             const currentLat =
               startLat + (p.targetLat - startLat) * effProgress - meander * 0.85;
             const currentLng =
               startLng + (p.targetLng - startLng) * effProgress + meander * 1.15;
 
-            const pStart = map.latLngToContainerPoint([startLat, startLng]);
+            // Trailing wake (comet tail) extending behind the droplet
+            const tailProgress = Math.max(0, effProgress - 0.18);
+            const tailMeander =
+              Math.sin(tailProgress * Math.PI) *
+              p.meanderAmp *
+              Math.sin(tailProgress * 7 + p.meanderPhase);
+            const tailLat =
+              startLat + (p.targetLat - startLat) * tailProgress - tailMeander * 0.85;
+            const tailLng =
+              startLng + (p.targetLng - startLng) * tailProgress + tailMeander * 1.15;
+
+            const pTail = map.latLngToContainerPoint([tailLat, tailLng]);
             const pCurrent = map.latLngToContainerPoint([currentLat, currentLng]);
 
-            // Fluid trailing wake
+            // Fluid trailing wake segment
             ctx.save();
             ctx.strokeStyle = tailColor;
-            ctx.globalAlpha = 0.22;
-            ctx.lineWidth = 1.1;
+            ctx.globalAlpha = 0.35;
+            ctx.lineWidth = 1.3;
             ctx.beginPath();
-            ctx.moveTo(pStart.x, pStart.y);
+            ctx.moveTo(pTail.x, pTail.y);
             ctx.lineTo(pCurrent.x, pCurrent.y);
             ctx.stroke();
             ctx.restore();
 
-            // Super-particle droplet marker
+            // Droplet head with subtle luminous glow
             ctx.save();
             ctx.fillStyle = tailColor;
             ctx.shadowColor = tailColor;
-            ctx.shadowBlur = 3;
-            ctx.globalAlpha = 0.88;
+            ctx.shadowBlur = 4;
+            ctx.globalAlpha = 0.92;
             ctx.beginPath();
-            ctx.arc(pCurrent.x, pCurrent.y, 2, 0, Math.PI * 2);
+            ctx.arc(pCurrent.x, pCurrent.y, 2.2, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
           });
@@ -484,17 +512,17 @@ function OpenDriftBacktrackAnimation({
     const redrawCurrent = () => {
       const size = map.getSize();
       if (size.x === 0 || size.y === 0) return;
-      canvas.width = size.x;
-      canvas.height = size.y;
-      const topLeft = map.containerPointToLayerPoint([0, 0]);
-      L.DomUtil.setPosition(canvas, topLeft);
+      if (canvas.width !== size.x || canvas.height !== size.y) {
+        canvas.width = size.x;
+        canvas.height = size.y;
+      }
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
       ctx.clearRect(0, 0, size.x, size.y);
 
       const progress = animProgressRef.current;
       const tailColor =
-        progress < 0.4 ? "#38BDF8" : progress < 0.75 ? "#F59E0B" : "#EF4444";
+        progress < 0.38 ? "#38BDF8" : progress < 0.72 ? "#F59E0B" : "#EF4444";
 
       particles.forEach((p) => {
         const startLat = slickCenter[0] + p.seedLatOffset;
@@ -503,36 +531,45 @@ function OpenDriftBacktrackAnimation({
         const meander =
           Math.sin(effProgress * Math.PI) *
           p.meanderAmp *
-          Math.sin(effProgress * 6 + p.meanderPhase);
+          Math.sin(effProgress * 7 + p.meanderPhase);
         const currentLat =
           startLat + (p.targetLat - startLat) * effProgress - meander * 0.85;
         const currentLng =
           startLng + (p.targetLng - startLng) * effProgress + meander * 1.15;
 
-        const pStart = map.latLngToContainerPoint([startLat, startLng]);
+        const tailProgress = Math.max(0, effProgress - 0.18);
+        const tailMeander =
+          Math.sin(tailProgress * Math.PI) *
+          p.meanderAmp *
+          Math.sin(tailProgress * 7 + p.meanderPhase);
+        const tailLat =
+          startLat + (p.targetLat - startLat) * tailProgress - tailMeander * 0.85;
+        const tailLng =
+          startLng + (p.targetLng - startLng) * tailProgress + tailMeander * 1.15;
+
+        const pTail = map.latLngToContainerPoint([tailLat, tailLng]);
         const pCurrent = map.latLngToContainerPoint([currentLat, currentLng]);
 
         ctx.save();
         ctx.strokeStyle = tailColor;
-        ctx.globalAlpha = 0.22;
-        ctx.lineWidth = 1.1;
+        ctx.globalAlpha = 0.35;
+        ctx.lineWidth = 1.3;
         ctx.beginPath();
-        ctx.moveTo(pStart.x, pStart.y);
+        ctx.moveTo(pTail.x, pTail.y);
         ctx.lineTo(pCurrent.x, pCurrent.y);
         ctx.stroke();
         ctx.restore();
 
         ctx.save();
         ctx.fillStyle = tailColor;
-        ctx.globalAlpha = 0.88;
+        ctx.globalAlpha = 0.92;
         ctx.beginPath();
-        ctx.arc(pCurrent.x, pCurrent.y, 2, 0, Math.PI * 2);
+        ctx.arc(pCurrent.x, pCurrent.y, 2.2, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
       });
     };
 
-    // Start or restart animation
     startTimeRef.current = performance.now();
     animProgressRef.current = 0;
     if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
@@ -595,7 +632,7 @@ function OpenDriftBacktrackAnimation({
       <Polyline
         positions={[slickCenter, [currentLat, currentLng]]}
         pathOptions={{
-          color: "rgba(56, 189, 248, 0.4)",
+          color: "rgba(56, 189, 248, 0.45)",
           weight: 2.5,
           opacity: 0.85,
           dashArray: "4, 5",
@@ -608,12 +645,12 @@ function OpenDriftBacktrackAnimation({
         <CircleMarker
           key={`backtrack-step-${idx}`}
           center={[s.lat, s.lng]}
-          radius={idx === 3 ? 5.5 : 4}
+          radius={idx === 3 ? 6 : 4.5}
           pathOptions={{
             fillColor: s.color,
             fillOpacity: 1,
             color: "#FFFFFF",
-            weight: 1.8,
+            weight: 2,
           }}
         >
           <Tooltip direction="top" offset={[0, -8]} className="vessel-custom-tooltip">
@@ -641,17 +678,17 @@ function OpenDriftBacktrackAnimation({
 
 /**
  * Tactical Point Marker for Candidate Vessels.
+ * Clean, bold radar tracking disc with NO permanent text pills.
+ * All forensic details appear inside the curved rectangular card on hover.
  */
 function createVesselPointIcon(
   isDark: boolean,
-  isSelected: boolean,
-  confidence: number = 0.5
+  isSelected: boolean
 ) {
   const color = isDark ? "#EF3E42" : "#005A9C";
   const accentColor = isDark ? "#FF5252" : "#00D4E0";
-  const size = isSelected ? 40 : 32;
+  const size = isSelected ? 38 : 30;
   const dotSize = isSelected ? 18 : 15;
-  const scorePercent = Math.round(confidence * 100);
 
   const html = `
     <div style="
@@ -708,28 +745,6 @@ function createVesselPointIcon(
           background: #FFFFFF;
         "></div>
       </div>
-
-      <!-- Tactical score pill -->
-      <div style="
-        position: absolute;
-        top: -19px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(4, 21, 39, 0.95);
-        color: #FFFFFF;
-        border: 1px solid ${color};
-        padding: 1.5px 6px;
-        border-radius: 9999px;
-        font-size: 9px;
-        font-weight: 800;
-        white-space: nowrap;
-        font-family: 'Archivo Black', sans-serif;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-        pointer-events: none;
-        letter-spacing: 0.03em;
-      ">
-        ${scorePercent}% ${isDark ? "DARK" : "AIS"}
-      </div>
     </div>
   `;
 
@@ -743,7 +758,6 @@ function createVesselPointIcon(
 
 /**
  * Authentic Hydrographic Status Strip & Live Cursor Coordinate Tracker.
- * Replaces bulky faux-HUDs with real nautical cartographic information.
  */
 function NauticalInformationStrip({ center }: { center: [number, number] }) {
   const map = useMap();
@@ -773,7 +787,6 @@ function NauticalInformationStrip({ center }: { center: [number, number] }) {
   return (
     <div className="absolute bottom-3 left-4 z-[500] pointer-events-none select-none flex flex-col gap-1 text-white">
       <div className="bg-[#041527]/92 border border-[rgba(0,90,156,0.3)] rounded-xl px-3 py-1.5 backdrop-blur-md flex items-center gap-3.5 text-[10px] font-mono shadow-xl">
-        {/* Nautical Scale Rule (2 NM / 3.7 km) */}
         <div className="flex items-center gap-2 pr-3 border-r border-white/15">
           <div className="flex flex-col items-center">
             <div className="w-14 h-1 border-b border-l border-r border-white/80" />
@@ -781,7 +794,6 @@ function NauticalInformationStrip({ center }: { center: [number, number] }) {
           </div>
         </div>
 
-        {/* Live Cursor Coordinate Crosshair */}
         <div className="flex items-center gap-1.5 pr-3 border-r border-white/15">
           <span className="text-[#38BDF8]">POS:</span>
           <span className="text-white font-bold tracking-wider">
@@ -789,7 +801,6 @@ function NauticalInformationStrip({ center }: { center: [number, number] }) {
           </span>
         </div>
 
-        {/* Regional Bathymetry & Coastline Distance */}
         <div className="hidden sm:flex items-center gap-3 text-[9px] text-[#A3C0DC]">
           <span>DEPTH: ~72m (ARABIAN SHELF)</span>
           <span className="text-white/20">|</span>
@@ -804,7 +815,7 @@ export interface TridentMapInnerProps {
   center: [number, number];
   zoom?: number;
   height?: string | number;
-  slickCoordinates?: [number, number][]; // GeoJSON format [lng, lat]
+  slickCoordinates?: [number, number][];
   slickCenter?: [number, number];
   heatmapPoints?: { lat: number; lng: number; intensity: number }[];
   candidates?: Candidate[];
@@ -853,7 +864,6 @@ export default function TridentMapInner({
     darkOnlyFilter: overlays.darkOnlyFilter ?? false,
   });
 
-  // Basemap options
   const [basemapStyle, setBasemapStyle] = useState<"satellite" | "ocean" | "dark" | "voyager">("satellite");
   const [isSimulatingBacktrack, setIsSimulatingBacktrack] = useState(true);
   const [replayTrigger, setReplayTrigger] = useState(0);
@@ -870,12 +880,10 @@ export default function TridentMapInner({
     }));
   }, [overlays]);
 
-  // Convert GeoJSON coords [lng, lat] to Leaflet [lat, lng]
   const polygonLatLngs: [number, number][] = useMemo(() => {
     return slickCoordinates?.map((coord) => [coord[1], coord[0]]) || [];
   }, [slickCoordinates]);
 
-  // Filter candidates if darkOnlyFilter is set
   const filteredCandidates = useMemo(() => {
     return candidates.filter((c) => {
       if (activeLayers.darkOnlyFilter) {
@@ -935,7 +943,6 @@ export default function TridentMapInner({
       >
         <MapViewController center={center} zoom={zoom} />
 
-        {/* Selected High-Definition Basemap */}
         <TileLayer
           key={basemapStyle}
           url={basemapConfig.url}
@@ -944,7 +951,7 @@ export default function TridentMapInner({
           attribution={basemapConfig.attribution}
         />
 
-        {/* 1. Nautical Graticule Grid (Parallels & Meridians) */}
+        {/* 1. Nautical Graticule Grid */}
         <NauticalGraticule show={activeLayers.showGraticule} />
 
         {/* 2. Structured KDE Origin Probability Heatmap */}
@@ -961,10 +968,9 @@ export default function TridentMapInner({
           onComplete={() => setIsSimulatingBacktrack(false)}
         />
 
-        {/* 4. SAR Detected Slick Boundary (Authentic Radar Backscatter Damping) */}
+        {/* 4. SAR Detected Slick Boundary */}
         {activeLayers.showSlickPolygon && polygonLatLngs.length > 2 && (
           <>
-            {/* Primary radar backscatter attenuation polygon */}
             <Polygon
               positions={polygonLatLngs}
               pathOptions={{
@@ -990,7 +996,6 @@ export default function TridentMapInner({
               </Popup>
             </Polygon>
 
-            {/* Inner subtle radar perimeter ring */}
             <Polygon
               positions={polygonLatLngs}
               pathOptions={{
@@ -1003,7 +1008,6 @@ export default function TridentMapInner({
               }}
             />
 
-            {/* Slick Centroid Crosshair */}
             {slickCenter && (
               <CircleMarker
                 center={slickCenter}
@@ -1028,14 +1032,13 @@ export default function TridentMapInner({
           </>
         )}
 
-        {/* 5. Candidate Vessels — Point Markers with Curved Rectangular Hover Cards */}
+        {/* 5. Candidate Vessels — Point Markers with Curved Rectangular Hover Cards (NO permanent text pills) */}
         {activeLayers.showVessels &&
           filteredCandidates.map((vessel) => {
             const isSelected = vessel.vessel_id === selectedVesselId;
             const icon = createVesselPointIcon(
               vessel.is_dark,
-              isSelected,
-              vessel.confidence_score
+              isSelected
             );
 
             return (
@@ -1100,7 +1103,6 @@ export default function TridentMapInner({
             );
           })}
 
-        {/* Live Nautical Scale Bar & Position Tracker */}
         <NauticalInformationStrip center={center} />
       </MapContainer>
 
@@ -1131,12 +1133,8 @@ export default function TridentMapInner({
       <div className="absolute top-4 right-4 z-[500] bg-[#FFFFFF]/96 border border-[rgba(0,90,156,0.25)] rounded-2xl p-3 backdrop-blur-md flex flex-col gap-2 text-xs text-[#041527] select-none min-w-[205px] shadow-xl">
         <div className="flex items-center justify-between border-b border-[rgba(0,90,156,0.12)] pb-1.5 font-bold text-[10px] text-[#005A9C] uppercase tracking-wider">
           <span>TACTICAL OVERLAYS</span>
-          <span className="text-[9px] font-mono text-[#5A738E]">
-            {isSimulatingBacktrack ? "SIMULATING..." : "SIM READY"}
-          </span>
         </div>
 
-        {/* Replay Simulation Action */}
         <button
           onClick={handleReplaySimulation}
           className="px-2.5 py-1.5 bg-[#005A9C] hover:bg-[#00477d] text-white rounded-xl text-[10px] font-bold tracking-wider flex items-center justify-center gap-1.5 transition-colors cursor-pointer w-full mb-1 shadow-xs"
@@ -1144,7 +1142,7 @@ export default function TridentMapInner({
           <span className="material-symbols-outlined text-sm font-bold">
             {isSimulatingBacktrack ? "sync" : "replay"}
           </span>
-          <span>{isSimulatingBacktrack ? "REPLAYING OPENDRIFT..." : "REPLAY OPENDRIFT SIM"}</span>
+          <span>{isSimulatingBacktrack ? "SIMULATION PLAYING..." : "REPLAY OPENDRIFT SIM"}</span>
         </button>
 
         <div className="flex flex-col gap-1.5 text-[11px]">

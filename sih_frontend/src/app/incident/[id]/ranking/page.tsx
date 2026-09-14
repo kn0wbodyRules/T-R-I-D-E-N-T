@@ -115,12 +115,6 @@ export default function AttributionRankingPage({
                   High-Probability Suspect Lineup
                 </h2>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="px-3.5 py-1.5 bg-[#EDF3FA] border border-[rgba(0,90,156,0.2)] rounded-full text-xs flex items-center gap-2 text-[#005A9C] font-bold">
-                  <span className="w-2 h-2 rounded-full bg-[#EF3E42] animate-ping" />
-                  <span>SUSPECT #1 vs #2 DELTA: +4.3% CLOSE MARGIN</span>
-                </div>
-              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
