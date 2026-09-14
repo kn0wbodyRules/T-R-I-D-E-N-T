@@ -58,21 +58,21 @@ function GeoReferencedShaderHeatmap({ points, dimmed }: { points: { lat: number;
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const [ready, setReady] = React.useState(false);
 
-  // Compute geographic bounds from data
+  // Compute geographic bounds CENTERED on the hottest point
   const bounds = React.useMemo(() => {
     if (!points.length) return null;
-    const lats = points.map(p => p.lat);
-    const lngs = points.map(p => p.lng);
-    const minLat = Math.min(...lats);
-    const maxLat = Math.max(...lats);
-    const minLng = Math.min(...lngs);
-    const maxLng = Math.max(...lngs);
-    // Add 80% padding so the shader edge bleeds naturally
-    const latPad = (maxLat - minLat) * 0.8;
-    const lngPad = (maxLng - minLng) * 0.8;
+    // Find highest-intensity point — this is the true origin
+    const hottest = points.reduce((best, pt) =>
+      pt.intensity > best.intensity ? pt : best, points[0]);
+    // Find the maximum distance any point is from the hottest
+    const maxLatDist = Math.max(...points.map(p => Math.abs(p.lat - hottest.lat)));
+    const maxLngDist = Math.max(...points.map(p => Math.abs(p.lng - hottest.lng)));
+    // Build a symmetric box centered on the hottest point, padded 120%
+    const latRadius = Math.max(maxLatDist, 0.02) * 2.2;
+    const lngRadius = Math.max(maxLngDist, 0.02) * 2.2;
     return L.latLngBounds(
-      [minLat - latPad, minLng - lngPad],
-      [maxLat + latPad, maxLng + lngPad]
+      [hottest.lat - latRadius, hottest.lng - lngRadius],
+      [hottest.lat + latRadius, hottest.lng + lngRadius]
     );
   }, [points]);
 
@@ -382,17 +382,31 @@ export default function TridentMapInner({
           <GeoReferencedShaderHeatmap points={heatmapPoints} dimmed={activeLayers.heatmapDimmed} />
         )}
 
-        {/* 2. Detected Slick Polygon Overlay (Vibrant Cyan Radar Boundary) */}
+        {/* 2. SAR Detected Slick Boundary */}
         {activeLayers.showSlickPolygon && polygonLatLngs.length > 2 && (
           <>
+            {/* Outer glow border */}
             <Polygon
               positions={polygonLatLngs}
               pathOptions={{
-                color: "#00F0FF",
-                fillColor: "#005A9C",
-                fillOpacity: 0.5,
-                weight: 3,
-                dashArray: "6, 6",
+                color: "rgba(0, 200, 220, 0.35)",
+                fillColor: "transparent",
+                fillOpacity: 0,
+                weight: 8,
+                stroke: true,
+                lineCap: "round",
+                lineJoin: "round",
+              }}
+            />
+            {/* Solid slick boundary */}
+            <Polygon
+              positions={polygonLatLngs}
+              pathOptions={{
+                color: "#00D4E0",
+                fillColor: "#00A8B5",
+                fillOpacity: 0.18,
+                weight: 2,
+                stroke: true,
               }}
             >
               <Popup>
@@ -405,25 +419,15 @@ export default function TridentMapInner({
 
             {slickCenter && (
               <>
+                {/* Centroid pin — solid, no dashes */}
                 <CircleMarker
                   center={slickCenter}
-                  radius={12}
-                  pathOptions={{
-                    fillColor: "#00F0FF",
-                    fillOpacity: 0.25,
-                    color: "#00F0FF",
-                    weight: 1.5,
-                    dashArray: "3, 3",
-                  }}
-                />
-                <CircleMarker
-                  center={slickCenter}
-                  radius={6}
+                  radius={5}
                   pathOptions={{
                     fillColor: "#FFB800",
                     fillOpacity: 1,
                     color: "#FFFFFF",
-                    weight: 2,
+                    weight: 2.5,
                   }}
                 >
                   <Popup>
@@ -445,16 +449,28 @@ export default function TridentMapInner({
             const endLng = v.lng - v.u_curr * 0.09;
 
             return (
-              <Polyline
-                key={`drift-${i}`}
-                positions={[[v.lat, v.lng], [endLat, endLng]]}
-                pathOptions={{
-                  color: "#FFB800",
-                  weight: 2.5,
-                  dashArray: "4, 6",
-                  opacity: 0.9,
-                }}
-              />
+              <React.Fragment key={`drift-${i}`}>
+                {/* Glow underline */}
+                <Polyline
+                  positions={[[v.lat, v.lng], [endLat, endLng]]}
+                  pathOptions={{
+                    color: "rgba(255, 184, 0, 0.25)",
+                    weight: 6,
+                    opacity: 1,
+                    lineCap: "round",
+                  }}
+                />
+                {/* Solid drift line */}
+                <Polyline
+                  positions={[[v.lat, v.lng], [endLat, endLng]]}
+                  pathOptions={{
+                    color: "#FFB800",
+                    weight: 2,
+                    opacity: 0.9,
+                    lineCap: "round",
+                  }}
+                />
+              </React.Fragment>
             );
           })}
 
