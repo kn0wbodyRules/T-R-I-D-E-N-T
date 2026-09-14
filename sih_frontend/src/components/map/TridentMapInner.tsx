@@ -79,20 +79,17 @@ function createVesselLeafletIcon(
       <div style="
         width: ${size}px;
         height: ${size}px;
-        background: ${isDark ? "#EF3E42" : "#005A9C"};
-        color: #FFFFFF;
-        border: 2px solid #FFFFFF;
-        border-radius: 50%;
+        transform: rotate(${heading}deg);
+        filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: 'Alata', sans-serif;
-        font-weight: bold;
-        font-size: ${size > 30 ? "12px" : "10px"};
-        transform: rotate(${heading}deg);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        color: ${isDark ? "#EF3E42" : "#005A9C"};
       ">
-        ▲
+        <svg width="100%" height="100%" viewBox="0 0 24 24" fill="currentColor" stroke="white" stroke-width="1.5" stroke-linejoin="round">
+          <!-- Professional Vessel Hull Top-Down -->
+          <path d="M12 2.5L17.5 9V20C17.5 20.8 16.8 21.5 16 21.5H8C7.2 21.5 6.5 20.8 6.5 20V9L12 2.5Z" />
+        </svg>
       </div>
       <div style="
         position: absolute;
@@ -102,13 +99,14 @@ function createVesselLeafletIcon(
         background: rgba(4, 21, 39, 0.92);
         color: #FFFFFF;
         border: 1px solid ${color};
-        padding: 1px 6px;
-        border-radius: 6px;
+        padding: 2px 6px;
+        border-radius: 4px;
         font-size: 9px;
         font-weight: 700;
         white-space: nowrap;
         font-family: 'Valley Sans', sans-serif;
         backdrop-filter: blur(4px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
       ">
         ${scorePercent}% ${isDark ? "DARK" : "AIS"}
       </div>
