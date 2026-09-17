@@ -8,22 +8,12 @@ import VesselIcon from "@/components/map/VesselIcon";
 import ShapBarChart from "@/components/charts/ShapBarChart";
 import MaterialIcon from "@/components/ui/MaterialIcon";
 import { fetchVesselDetail } from "@/lib/mock-data";
+import { getVesselImage } from "@/lib/vessel-images";
 
 interface VesselDetailDrawerProps {
   vesselId: string | null;
   onClose: () => void;
 }
-
-const getVesselImage = (id: string) => {
-  const images = [
-    "https://images.unsplash.com/photo-1518527989017-5baca7a58d3c?w=800&auto=format&fit=crop&q=80",
-    "https://images.unsplash.com/photo-1585713181935-d5f622cc2415?w=800&auto=format&fit=crop&q=80",
-    "https://images.unsplash.com/photo-1606185540834-d6e7483ee1a4?w=800&auto=format&fit=crop&q=80",
-  ];
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash += id.charCodeAt(i);
-  return images[hash % images.length];
-};
 
 export default function VesselDetailDrawer({
   vesselId,
@@ -70,7 +60,7 @@ export default function VesselDetailDrawer({
             <div className="relative h-64 w-full flex-shrink-0 bg-[#041527]">
               {/* Image Background */}
               <img 
-                src={getVesselImage(vessel.vessel_id)} 
+                src={getVesselImage(vessel.vessel_id, vesselName)} 
                 className="absolute inset-0 w-full h-full object-cover mix-blend-screen opacity-90"
                 alt={vesselName}
               />

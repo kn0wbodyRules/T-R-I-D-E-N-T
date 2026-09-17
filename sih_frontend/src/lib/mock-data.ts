@@ -524,6 +524,98 @@ export const MOCK_CANDIDATES: Record<string, Candidate[]> = {
       course_deg: 130,
       last_seen_utc: "2026-09-02 04:15 UTC",
     },
+    {
+      vessel_id: "v-9221544",
+      name_or_unidentified: "MT MALACCA HIGHWAY",
+      position: { lat: 5.680, lng: 97.710 },
+      is_dark: false,
+      confidence_score: 0.542,
+      ais_matched: true,
+      imo: "9221544",
+      mmsi: "563081000",
+      flag: "Singapore",
+      type: "Chemical Tanker",
+      speed_knots: 13.2,
+      course_deg: 125,
+      last_seen_utc: "2026-09-02 03:40 UTC",
+    },
+    {
+      vessel_id: "v-dark-5512",
+      name_or_unidentified: "Unidentified — Dark Skiff #5512",
+      position: { lat: 5.735, lng: 97.780 },
+      is_dark: true,
+      confidence_score: 0.220,
+      ais_matched: false,
+      imo: "UNKNOWN",
+      mmsi: "N/A",
+      flag: "Unknown",
+      type: "Fast Craft / Skiff",
+      speed_knots: 7.5,
+      course_deg: 140,
+      last_seen_utc: "2026-09-02 02:50 UTC",
+    },
+  ],
+  [CORSICA_INCIDENT_ID]: [
+    {
+      vessel_id: "v-ulysse",
+      name_or_unidentified: "RO-PAX ULYSSE",
+      position: { lat: 42.985, lng: 9.680 },
+      is_dark: false,
+      confidence_score: 0.939,
+      ais_matched: true,
+      imo: "9142459",
+      mmsi: "672239000",
+      flag: "Tunisia (CTN)",
+      type: "Ro-Ro / Passenger Ferry",
+      speed_knots: 19.0,
+      course_deg: 320,
+      last_seen_utc: "2018-10-07 05:30 UTC",
+    },
+    {
+      vessel_id: "v-csl-virginia",
+      name_or_unidentified: "CSL VIRGINIA",
+      position: { lat: 43.010, lng: 9.695 },
+      is_dark: false,
+      confidence_score: 0.342,
+      ais_matched: true,
+      imo: "9289568",
+      mmsi: "210352000",
+      flag: "Cyprus",
+      type: "Container Ship (At Anchor)",
+      speed_knots: 0.1,
+      course_deg: 185,
+      last_seen_utc: "2018-10-07 05:30 UTC",
+    },
+    {
+      vessel_id: "v-jean-nicoli",
+      name_or_unidentified: "MV JEAN NICOLI",
+      position: { lat: 42.850, lng: 9.540 },
+      is_dark: false,
+      confidence_score: 0.185,
+      ais_matched: true,
+      imo: "9161948",
+      mmsi: "228316800",
+      flag: "France",
+      type: "Ro-Pax Ferry (Corsica Linea)",
+      speed_knots: 18.2,
+      course_deg: 15,
+      last_seen_utc: "2018-10-07 06:15 UTC",
+    },
+    {
+      vessel_id: "v-kalliste",
+      name_or_unidentified: "MV KALLISTE",
+      position: { lat: 42.720, lng: 9.490 },
+      is_dark: false,
+      confidence_score: 0.092,
+      ais_matched: true,
+      imo: "9050614",
+      mmsi: "227022300",
+      flag: "France",
+      type: "Ro-Pax Ferry (La Méridionale)",
+      speed_knots: 17.4,
+      course_deg: 20,
+      last_seen_utc: "2018-10-07 06:40 UTC",
+    },
   ],
 };
 
@@ -653,6 +745,69 @@ export const MOCK_VESSEL_DETAILS: Record<string, VesselDetail> = {
     ],
     counterfactual_text:
       "What would change this attribution? Complete analysis pending SAR Sentinel-1B second pass to verify slick dissipation rate.",
+  },
+  "v-ulysse": {
+    vessel_id: "v-ulysse",
+    vessel_info: {
+      name: "RO-PAX ULYSSE",
+      imo: "9142459",
+      flag: "Tunisia",
+      type: "Ro-Ro / Passenger Ferry (CTN)",
+      callsign: "TSNV",
+      length_m: 161,
+    },
+    is_dark: false,
+    viirs_crosscheck: {
+      applicable: false,
+      matched: false,
+      notes: "VIIRS Daytime Overpass: High thermal signature from engine exhaust plumes matching 19.0 knot full-transit speed.",
+    },
+    behavior_features: {
+      speed: 19.0,
+      route_deviation: 4.85,
+      stop_duration_min: 0,
+    },
+    anomaly_score: 0.958,
+    attribution_score: 0.939,
+    shap_breakdown: [
+      { factor: "Direct Collision Trajectory & Speed (19 kts)", contribution: 0.44 },
+      { factor: "Zero Evasive Manoeuvre prior to Impact", contribution: 0.28 },
+      { factor: "Hydrodynamic Backtrack Vector Intersection", contribution: 0.21 },
+      { factor: "Continuous AIS Broadcast", contribution: -0.05 },
+    ],
+    counterfactual_text:
+      "What would change this attribution? If Ulysse had engaged active navigational lookout or altered course by >=12° 20 minutes prior to impact, collision trajectory with anchored CSL Virginia would have been averted entirely.",
+  },
+  "v-csl-virginia": {
+    vessel_id: "v-csl-virginia",
+    vessel_info: {
+      name: "CSL VIRGINIA",
+      imo: "9289568",
+      flag: "Cyprus",
+      type: "Container Ship",
+      callsign: "5BBU3",
+      length_m: 304,
+    },
+    is_dark: false,
+    viirs_crosscheck: {
+      applicable: false,
+      matched: false,
+      notes: "Stationary anchored radar reflection. Hull breach on starboard bunker fuel tank confirmed.",
+    },
+    behavior_features: {
+      speed: 0.1,
+      route_deviation: 0.0,
+      stop_duration_min: 1440,
+    },
+    anomaly_score: 0.312,
+    attribution_score: 0.342,
+    shap_breakdown: [
+      { factor: "Stationary Anchored Status (0.1 kts)", contribution: -0.32 },
+      { factor: "Fuel Bunker Rupture Casualty Point", contribution: 0.35 },
+      { factor: "Proximity to Oil Spill Origin", contribution: 0.31 },
+    ],
+    counterfactual_text:
+      "CSL Virginia was anchored at Cap Corse waiting for berthing instructions when struck amidships by Ulysse. Ruptured tanks spilled ~600 m³ of heavy fuel oil.",
   },
 };
 
@@ -802,9 +957,101 @@ export const MOCK_RANKINGS: Record<string, RankingResponse> = {
         type: "Product Tanker",
         speed_knots: 10.1,
       },
+      {
+        rank: 2,
+        vessel_id: "v-9221544",
+        name_or_unidentified: "MT MALACCA HIGHWAY",
+        position: { lat: 5.680, lng: 97.710 },
+        is_dark: false,
+        confidence_score: 0.542,
+        ais_matched: true,
+        imo: "9221544",
+        mmsi: "563081000",
+        flag: "Singapore",
+        type: "Chemical Tanker",
+        speed_knots: 13.2,
+      },
+      {
+        rank: 3,
+        vessel_id: "v-dark-5512",
+        name_or_unidentified: "Unidentified — Dark Skiff #5512",
+        position: { lat: 5.735, lng: 97.780 },
+        is_dark: true,
+        confidence_score: 0.220,
+        ais_matched: false,
+        imo: "UNKNOWN",
+        mmsi: "N/A",
+        flag: "Unknown",
+        type: "Fast Craft / Skiff",
+        speed_knots: 7.5,
+      },
     ],
     margin_note:
-      "PRELIMINARY ATTRIBUTION: Processing pipeline active. Current lead: PACIFIC EMERALD (79.1%).",
+      "DECISIVE ATTRIBUTION: PACIFIC EMERALD (79.1%) leads MT MALACCA HIGHWAY (+24.9% margin). Tanker corridor trajectory and speed anomalies align with hydrodynamic drift origin.",
+    is_close_margin: false,
+  },
+  [CORSICA_INCIDENT_ID]: {
+    incident_id: CORSICA_INCIDENT_ID,
+    rows: [
+      {
+        rank: 1,
+        vessel_id: "v-ulysse",
+        name_or_unidentified: "RO-PAX ULYSSE",
+        position: { lat: 42.985, lng: 9.680 },
+        is_dark: false,
+        confidence_score: 0.939,
+        ais_matched: true,
+        imo: "9142459",
+        mmsi: "672239000",
+        flag: "Tunisia (CTN)",
+        type: "Ro-Ro / Passenger Ferry",
+        speed_knots: 19.0,
+      },
+      {
+        rank: 2,
+        vessel_id: "v-csl-virginia",
+        name_or_unidentified: "CSL VIRGINIA",
+        position: { lat: 43.010, lng: 9.695 },
+        is_dark: false,
+        confidence_score: 0.342,
+        ais_matched: true,
+        imo: "9289568",
+        mmsi: "210352000",
+        flag: "Cyprus",
+        type: "Container Ship (At Anchor)",
+        speed_knots: 0.1,
+      },
+      {
+        rank: 3,
+        vessel_id: "v-jean-nicoli",
+        name_or_unidentified: "MV JEAN NICOLI",
+        position: { lat: 42.850, lng: 9.540 },
+        is_dark: false,
+        confidence_score: 0.185,
+        ais_matched: true,
+        imo: "9161948",
+        mmsi: "228316800",
+        flag: "France",
+        type: "Ro-Pax Ferry (Corsica Linea)",
+        speed_knots: 18.2,
+      },
+      {
+        rank: 4,
+        vessel_id: "v-kalliste",
+        name_or_unidentified: "MV KALLISTE",
+        position: { lat: 42.720, lng: 9.490 },
+        is_dark: false,
+        confidence_score: 0.092,
+        ais_matched: true,
+        imo: "9050614",
+        mmsi: "227022300",
+        flag: "France",
+        type: "Ro-Pax Ferry (La Méridionale)",
+        speed_knots: 17.4,
+      },
+    ],
+    margin_note:
+      "DECISIVE CRIMINAL ATTRIBUTION: RO-PAX ULYSSE (CTN, IMO 9142459) rammed into anchored container ship CSL VIRGINIA at 19.0 knots in clear weather north of Cap Corse, puncturing fuel bunker tanks and spilling ~600 m³ of heavy fuel oil. AIS telemetry confirms ULYSSE maintained straight collision heading without evasive action prior to impact.",
     is_close_margin: false,
   },
 };
@@ -1019,7 +1266,7 @@ export async function fetchCandidates(incidentId: string): Promise<Candidate[]> 
       return await fetchRealCandidates();
     } catch (err) {
       console.warn("Real backend unreachable for Corsica candidates, using mock fallback:", err);
-      return MOCK_CANDIDATES["INC-2026-0892"];
+      return MOCK_CANDIDATES[CORSICA_INCIDENT_ID] || MOCK_CANDIDATES["INC-2026-0892"];
     }
   }
   await new Promise((r) => setTimeout(r, 80));
@@ -1032,7 +1279,7 @@ export async function fetchVesselDetail(vesselId: string): Promise<VesselDetail>
       return await fetchRealVesselDetail(vesselId);
     } catch (err) {
       console.warn("Real backend unreachable for vessel detail, using mock fallback:", err);
-      return MOCK_VESSEL_DETAILS["v-dark-7702"];
+      return MOCK_VESSEL_DETAILS[vesselId] || MOCK_VESSEL_DETAILS["v-ulysse"] || MOCK_VESSEL_DETAILS["v-dark-7702"];
     }
   }
   await new Promise((r) => setTimeout(r, 80));
@@ -1045,7 +1292,7 @@ export async function fetchRanking(incidentId: string): Promise<RankingResponse>
       return await fetchRealRanking();
     } catch (err) {
       console.warn("Real backend unreachable for Corsica ranking, using mock fallback:", err);
-      return MOCK_RANKINGS["INC-2026-0892"];
+      return MOCK_RANKINGS[CORSICA_INCIDENT_ID] || MOCK_RANKINGS["INC-2026-0892"];
     }
   }
   await new Promise((r) => setTimeout(r, 80));

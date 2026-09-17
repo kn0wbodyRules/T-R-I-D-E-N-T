@@ -16,6 +16,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import clsx from "clsx";
 import { Candidate } from "@/lib/mock-data";
+import { getVesselImage } from "@/lib/vessel-images";
 
 // Pan/zoom synchronization helper without redundant interrupted animations
 function MapViewController({
@@ -36,19 +37,6 @@ function MapViewController({
   return null;
 }
 
-/**
- * Verified context-accurate vessel thumbnail provider (heavy maritime cargo / tankers)
- */
-const getVesselImage = (id: string) => {
-  const images = [
-    "https://images.unsplash.com/photo-1518527989017-5baca7a58d3c?w=800&auto=format&fit=crop&q=80",
-    "https://images.unsplash.com/photo-1585713181935-d5f622cc2415?w=800&auto=format&fit=crop&q=80",
-    "https://images.unsplash.com/photo-1606185540834-d6e7483ee1a4?w=800&auto=format&fit=crop&q=80",
-  ];
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash += id.charCodeAt(i);
-  return images[hash % images.length];
-};
 
 /**
  * Authentic Maritime Coordinate Graticule (Parallels & Meridians).
@@ -1059,7 +1047,7 @@ export default function TridentMapInner({
                   <div className="w-[230px] bg-[#FFFFFF] border border-[rgba(0,90,156,0.25)] rounded-2xl overflow-hidden shadow-2xl text-left pointer-events-auto select-none p-0">
                     <div className="relative w-full h-24 bg-[#041527] overflow-hidden rounded-t-2xl">
                       <img
-                        src={getVesselImage(vessel.vessel_id)}
+                        src={getVesselImage(vessel.vessel_id, vessel.name_or_unidentified)}
                         alt={vessel.name_or_unidentified}
                         className="w-full h-full object-cover"
                       />
